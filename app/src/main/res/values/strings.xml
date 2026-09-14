@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">The_Equality</string>
+    <string name="app_display_name">The Equality</string>
+    <string name="problems_title">Problems</string>
+    <string name="search_hint">Search equations</string>
+    <string name="content_description_search">Search</string>
+    <string name="parameter_count_format">%1$d par.</string>
+    <string name="no_results">No results</string>
+    <string name="coming_soon">Coming soon</string>
+
+    <string name="problem_quadratic_name">quadratic equation</string>
+    <string name="problem_quadratic_formula">ax²+bx+c=0</string>
+    <string name="problem_linear_name">linear equation</string>
+    <string name="problem_linear_formula">ax+b=0</string>
+    <string name="problem_cubic_name">cubic equation</string>
+    <string name="problem_cubic_formula">ax³+bx²+cx+d=0</string>
 </resources>
