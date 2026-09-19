@@ -11,4 +11,10 @@
     </style>
 
     <style name="Theme.The_Equality" parent="Base.Theme.The_Equality" />
+
+    <style name="Theme.The_Equality.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.The_Equality</item>
+    </style>
 </resources>

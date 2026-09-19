@@ -1,17 +1,32 @@
 <resources>
-    <string name="app_name">The_Equality</string>
+    <string name="app_name">The Equality</string>
     <string name="app_display_name">The Equality</string>
     <string name="problems_title">Problems</string>
     <string name="search_hint">Search equations</string>
     <string name="content_description_search">Search</string>
+    <string name="content_description_add">Add equation</string>
+    <string name="content_description_more">More options</string>
     <string name="parameter_count_format">%1$d par.</string>
     <string name="no_results">No results</string>
     <string name="coming_soon">Coming soon</string>
+    <string name="ok">OK</string>
+
+    <string name="menu_about">About the app</string>
+    <string name="menu_number_domain">Number domain</string>
+    <string name="about_title">About The Equality</string>
+    <string name="about_message">The Equality is an equation calculator for school and university students. Pick a problem, enter coefficients, and get roots, discriminant details, and function behavior. Calculations are optimized with native C++ solvers.</string>
+    <string name="number_domain_title">Number domain</string>
+    <string name="number_domain_saved">Domain: %1$s</string>
+
+    <string name="domain_integers">Integers</string>
+    <string name="domain_rationals">Rationals</string>
+    <string name="domain_reals">Reals</string>
+    <string name="domain_complex">Complex</string>
 
     <string name="problem_quadratic_name">quadratic equation</string>
-    <string name="problem_quadratic_formula">ax²+bx+c=0</string>
+    <string name="problem_quadratic_formula">ax²+bx+c</string>
     <string name="problem_linear_name">linear equation</string>
-    <string name="problem_linear_formula">ax+b=0</string>
+    <string name="problem_linear_formula">ax+b</string>
     <string name="problem_cubic_name">cubic equation</string>
-    <string name="problem_cubic_formula">ax³+bx²+cx+d=0</string>
+    <string name="problem_cubic_formula">ax³+bx²+cx+d</string>
 </resources>

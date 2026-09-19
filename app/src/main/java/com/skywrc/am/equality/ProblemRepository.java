@@ -1,5 +1,7 @@
 package com.skywrc.am.equality;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -13,24 +15,24 @@ public final class ProblemRepository {
     }
 
     @NonNull
-    public static List<Problem> getSampleProblems() {
+    public static List<Problem> getSampleProblems(@NonNull Context context) {
         return Collections.unmodifiableList(new ArrayList<>(Arrays.asList(
                 new Problem(
-                        "quadratic",
-                        "quadratic equation",
-                        "ax²+bx+c=0",
-                        3
-                ),
-                new Problem(
                         "linear",
-                        "linear equation",
-                        "ax+b=0",
+                        context.getString(R.string.problem_linear_name),
+                        context.getString(R.string.problem_linear_formula),
                         2
                 ),
                 new Problem(
+                        "quadratic",
+                        context.getString(R.string.problem_quadratic_name),
+                        context.getString(R.string.problem_quadratic_formula),
+                        3
+                ),
+                new Problem(
                         "cubic",
-                        "cubic equation",
-                        "ax³+bx²+cx+d=0",
+                        context.getString(R.string.problem_cubic_name),
+                        context.getString(R.string.problem_cubic_formula),
                         4
                 )
         )));
