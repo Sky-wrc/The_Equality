@@ -17,4 +17,34 @@
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="postSplashScreenTheme">@style/Theme.The_Equality</item>
     </style>
+
+    <style name="Widget.The_Equality.PopupMenu" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="android:popupElevation">8dp</item>
+    </style>
+
+    <style name="ThemeOverlay.The_Equality.PopupMenu" parent="ThemeOverlay.Material3">
+        <item name="popupMenuStyle">@style/Widget.The_Equality.PopupMenu</item>
+        <item name="android:popupMenuStyle">@style/Widget.The_Equality.PopupMenu</item>
+        <item name="colorSurface">@color/surface_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:colorBackground">@color/surface_card</item>
+    </style>
+
+    <style name="ThemeOverlay.The_Equality.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/surface_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/TextAppearance.The_Equality.DialogTitle</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/TextAppearance.The_Equality.DialogBody</item>
+    </style>
+
+    <style name="TextAppearance.The_Equality.DialogTitle" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextAppearance.The_Equality.DialogBody" parent="MaterialAlertDialog.Material3.Body.Text">
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
 </resources>

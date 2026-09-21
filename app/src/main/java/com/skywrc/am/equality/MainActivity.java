@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         adapter = new ProblemAdapter(problem ->
-                Toast.makeText(this, R.string.coming_soon, Toast.LENGTH_SHORT).show()
+                startActivity(CoefficientInputActivity.createIntent(this, problem))
         );
         adapter.submitSource(ProblemRepository.getSampleProblems(this), this::updateEmptyState);
         recycler.setLayoutManager(new LinearLayoutManager(this));
@@ -99,7 +100,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showOverflowMenu(View anchor) {
-        PopupMenu popupMenu = new PopupMenu(this, anchor);
+        ContextThemeWrapper wrapper = new ContextThemeWrapper(
+                this,
+                R.style.ThemeOverlay_The_Equality_PopupMenu
+        );
+        PopupMenu popupMenu = new PopupMenu(wrapper, anchor);
         popupMenu.getMenuInflater().inflate(R.menu.menu_overflow, popupMenu.getMenu());
         popupMenu.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
@@ -117,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAboutDialog() {
-        new MaterialAlertDialogBuilder(this)
+        new MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_The_Equality_AlertDialog)
                 .setTitle(R.string.about_title)
                 .setMessage(R.string.about_message)
                 .setPositiveButton(R.string.ok, null)
@@ -136,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        new MaterialAlertDialogBuilder(this)
+        new MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_The_Equality_AlertDialog)
                 .setTitle(R.string.number_domain_title)
                 .setSingleChoiceItems(labels, checked, (dialog, which) -> {
                     NumberDomain selected = domains[which];

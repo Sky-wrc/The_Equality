@@ -10,6 +10,9 @@
     <string name="no_results">No results</string>
     <string name="coming_soon">Coming soon</string>
     <string name="ok">OK</string>
+    <string name="calculate">Calculate</string>
+    <string name="content_description_back">Back</string>
+    <string name="coefficient_hint">Enter %1$s</string>
 
     <string name="menu_about">About the app</string>
     <string name="menu_number_domain">Number domain</string>
