@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include "../include/mymath.h"
 //67=C 78=N 82=R 90=Z
 double discriminant( double a, double b, double c, char M)
@@ -21,10 +22,11 @@ double discriminant( double a, double b, double c, char M)
 
 void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, double c, char M)
 {
+    int g = 1;
     if(a!=0){
         if (a == (int)a && b == (int)b && c == (int)c){
             int a_z = (int)a,b_z = (int)b,c_z = (int)c;
-            int g = GCD(GCD(a,b),c);
+            g = GCD(GCD(a,b),c);
             a_z/=g;
             b_z/=g;
             c_z/=g;
@@ -45,8 +47,8 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                 *n3 = -1;
             }
             else{
-                double x1 = min_num(((-b+mysqrt(*n3))/(2*a)),((-b-mysqrt(*n3))/(2*a)));
-                double x2 = max_num(((-b+mysqrt(*n3))/(2*a)),((-b-mysqrt(*n3))/(2*a)));
+                double x1 = min_num(((-b+sqrt(*n3))/(2*a)),((-b-sqrt(*n3))/(2*a)));
+                double x2 = max_num(((-b+sqrt(*n3))/(2*a)),((-b-sqrt(*n3))/(2*a)));
                 if(M==82)
                     if(*n3 == 0){ //Discriminant = 0
                     
@@ -58,6 +60,7 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                     {
                         *n1 = x1;
                         *n2 = x2;
+                        *n3 = (*n3*g*g);
                         //printf("%f %f %f ",*n1, *n2, *n3);
                     }
                     else
@@ -87,7 +90,7 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                         else{//bigger root is not integer
                             *n2 = -0.000001;
                         }
-                        *n3 = (int)*n3;
+                        *n3 = (int)(*n3*g*g);
                         //printf("%f %f %f ",*n1, *n2, *n3);
                         
                     }
@@ -120,7 +123,7 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                         else{//bigger root is not natural
                             *n2 = -4;
                         }
-                        *n3 = (int)*n3;
+                        *n3 = (int)(*n3*g*g);
                         
                     }
                     else;
@@ -145,6 +148,6 @@ int main()
     else if(n1 == -1 && n2 == -1 && n3 == -1)
         printf("D<0 <=> No roots in Real Numbers");
     else
-        printf("x1 = %f\nx2 = %f\nD = %f Scrt(D) = %f\n",n1,n2,n3,mysqrt(n3));
+        printf("x1 = %f\nx2 = %f\nD = %f Scrt(D) = %f\n",n1,n2,n3,sqrt(n3));
     return 0;
 }

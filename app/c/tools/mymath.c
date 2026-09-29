@@ -1,27 +1,59 @@
 #include <stdio.h>
 
-double mysqrt(double n)
-{
-    double r=n,l=0;
-    double s = (l + n)/2;
-    int k = 0;
-    while (s*s!=n){
-        k +=1;
-        if (k >100)
-            break;
-        if  (s*s<n){
-            l = s;
-            s = (l + r)/2;
-        }
-        else {
-            r = s;
-            s = (l + r)/2;
-        }
-        // printf("%f", s);
-        // printf("\n");
-    }
-    return s;
-}
+// double mysqrt(double n)
+// {
+//     double r=n,l=0,s;
+//     // printf("%f\n", n);
+//     if (n < 1){
+//         r=1;
+//         l = n;
+//         s = (l + r)/2;
+//         int k = 0;
+//         while (s*s!=n){
+//             // printf("%f\n", s);
+//             k +=1;
+//             if (k >100){
+//                 //printf("%f\n",s);
+//                 break;
+//             }
+//             if( -0.00001 < (s*s-n) < 0.00001)
+//                 break;  
+//             if  (s*s>n){
+//                 r = s;
+//                 s = (l + r)/2;
+//             }
+//             else {
+//                 l = s;
+//                 s = (l + r)/2;
+//             }
+            
+//         }
+//     }
+//     else
+//     {
+//         s = (l + r)/2;
+//         int k = 0;
+//         while (s*s!=n){
+//             k +=1;
+//             if (k >100){
+//                 //printf("%f\n",s);
+//                 break;
+//             } 
+//             if  (s*s>n){
+//                 r = s;
+//                 s = (l + r)/2;
+//             }
+//             else {
+//                 l = s;
+//                 s = (l + r)/2;
+//             }
+            
+//         // printf("\n");
+//         }
+//     }
+    
+//     return s;
+// }
 
 double max_num(double a, double b)
 {
@@ -50,7 +82,7 @@ int GCD(int a, int b)
         a = b;
         b = tm;
     }  
-    while (b > 0){
+    while (b != 0){
         int tm = b;
         b = a % b;
         a = tm;
@@ -61,7 +93,7 @@ int GCD(int a, int b)
 
 // int main ()
 // {
-//     int t = 99999999;
-//     printf("%f",mysqrt(t));
+//     int t = 0.25;
+//     printf("%f",mysqrt(0.25));
 //     return 0;
 // }
