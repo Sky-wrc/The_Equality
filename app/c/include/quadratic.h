@@ -1,4 +1,5 @@
-#ifndef linear.h
-#define linear.h
-double linear_solver(double a, double b);
+#ifndef quadratic
+#define quadratic
+double quadratic_solver(double* n1, double* n2, double* n3, double a, double b, double c, char M);
+double discriminant(double a, double b, double c, char M);
 #endif

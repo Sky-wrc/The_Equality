@@ -1,4 +1,4 @@
-#ifndef mymaths
+#ifndef mymath
 #define mymath
 double mysqrt(double n);
 double max_num(double a, double b);

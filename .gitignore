@@ -96,3 +96,13 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+
+# bin
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.out
+*.obj
+*.o
