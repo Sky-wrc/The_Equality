@@ -13,23 +13,42 @@
     <string name="calculate">Calculate</string>
     <string name="content_description_back">Back</string>
     <string name="coefficient_hint">Enter %1$s</string>
+    <string name="error_enter_coefficient">Enter %1$s</string>
+    <string name="error_invalid_number">Invalid number</string>
+
+    <string name="result_title">Result</string>
+    <string name="result_domain">Number domain: %1$s</string>
+    <string name="result_discriminant">D = %1$s</string>
+    <string name="result_discriminant_negative">D &lt; 0</string>
+    <string name="result_sqrt_discriminant">√D = %1$s</string>
+    <string name="result_quotient">Quotient = %1$s</string>
+    <string name="result_modulo">Modulo = %1$s</string>
+    <string name="result_root_single">x = %1$s</string>
+    <string name="result_root_indexed">x%1$d = %2$s</string>
+    <string name="result_no_roots">No roots in the selected number domain</string>
+    <string name="result_infinite_roots">Infinitely many roots</string>
+    <string name="result_not_quadratic">a = 0: not a quadratic equation</string>
+    <string name="result_undetermined">Roots cannot be determined in the selected number domain</string>
+    <string name="result_solver_unavailable">Solver not available yet</string>
 
     <string name="menu_about">About the app</string>
     <string name="menu_number_domain">Number domain</string>
+    <string name="menu_number_domain_with_code">Number domain\u2002\u2002%1$s</string>
+    <string name="content_description_change_domain">Change number domain</string>
     <string name="about_title">About The Equality</string>
-    <string name="about_message">The Equality is an equation calculator for school and university students. Pick a problem, enter coefficients, and get roots, discriminant details, and function behavior. Calculations are optimized with native C++ solvers.</string>
+    <string name="about_message">The Equality is an equation calculator for school and university students. Pick a problem, enter coefficients, and get roots, discriminant details, and function behavior. Calculations are optimized with native C solvers.</string>
     <string name="number_domain_title">Number domain</string>
     <string name="number_domain_saved">Domain: %1$s</string>
 
+    <string name="domain_naturals">Naturals</string>
     <string name="domain_integers">Integers</string>
-    <string name="domain_rationals">Rationals</string>
     <string name="domain_reals">Reals</string>
     <string name="domain_complex">Complex</string>
 
     <string name="problem_quadratic_name">quadratic equation</string>
-    <string name="problem_quadratic_formula">ax²+bx+c</string>
+    <string name="problem_quadratic_formula">ax²+bx+c=0</string>
     <string name="problem_linear_name">linear equation</string>
-    <string name="problem_linear_formula">ax+b</string>
+    <string name="problem_linear_formula">ax+b=0        </string>
     <string name="problem_cubic_name">cubic equation</string>
-    <string name="problem_cubic_formula">ax³+bx²+cx+d</string>
+    <string name="problem_cubic_formula">ax³+bx²+cx+d=0</string>
 </resources>

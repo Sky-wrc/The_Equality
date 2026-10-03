@@ -19,16 +19,7 @@ void linear_solver(double* n1, double *n2, double a, double b, char M)
                     *n2 = -4; //modullo can't be found
                 }
             }
-            else{
-                *n1 = -1;
-                *n2 = -2; //Annatural answer
-            }
         }
-        else if(M == 'R'){
-            *n1 =(-b) / a;
-            *n2 = 0; // Answer is Real
-        }
-            
         else if(M=='Z'){
             if(a>=1 || a<=-1){
                 *n1 = (int)((-b) / a);
@@ -38,6 +29,10 @@ void linear_solver(double* n1, double *n2, double a, double b, char M)
                 *n1 = (int)((-b) / a);
                 *n2 = -4.1; //modullo can't be found
             }
+        }
+        else if(M=='R'){
+                *n1 = ((-b) / a);
+                *n2 = 0; //real root with 0 modulo
         }
         else;
     else if(b==0 && a==0){

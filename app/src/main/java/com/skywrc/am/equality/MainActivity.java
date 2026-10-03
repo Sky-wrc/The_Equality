@@ -1,9 +1,14 @@
 package com.skywrc.am.equality;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -13,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -106,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
         );
         PopupMenu popupMenu = new PopupMenu(wrapper, anchor);
         popupMenu.getMenuInflater().inflate(R.menu.menu_overflow, popupMenu.getMenu());
+        popupMenu.getMenu().findItem(R.id.action_number_domain).setTitle(numberDomainMenuTitle());
         popupMenu.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
             if (id == R.id.action_about) {
@@ -130,31 +137,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showNumberDomainDialog() {
-        NumberDomain[] domains = NumberDomain.values();
-        String[] labels = new String[domains.length];
-        int checked = 0;
-        NumberDomain current = preferences.getNumberDomain();
-        for (int i = 0; i < domains.length; i++) {
-            labels[i] = getString(domains[i].getLabelResId());
-            if (domains[i] == current) {
-                checked = i;
-            }
-        }
+        NumberDomainDialog.show(this, preferences, selected -> { });
+    }
 
-        new MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_The_Equality_AlertDialog)
-                .setTitle(R.string.number_domain_title)
-                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
-                    NumberDomain selected = domains[which];
-                    preferences.setNumberDomain(selected);
-                    Toast.makeText(
-                            this,
-                            getString(R.string.number_domain_saved, getString(selected.getLabelResId())),
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    dialog.dismiss();
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+    @NonNull
+    private CharSequence numberDomainMenuTitle() {
+        String code = String.valueOf(preferences.getNumberDomain().getCode());
+        SpannableString title = new SpannableString(getString(R.string.menu_number_domain_with_code, code));
+        int start = title.length() - code.length();
+        title.setSpan(new ForegroundColorSpan(getColor(R.color.text_primary)), start, title.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        title.setSpan(new StyleSpan(Typeface.BOLD), start, title.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return title;
     }
 
     private void toggleSearch() {
