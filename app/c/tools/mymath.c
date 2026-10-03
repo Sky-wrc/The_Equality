@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 // double mysqrt(double n)
 // {
 //     double r=n,l=0,s;
