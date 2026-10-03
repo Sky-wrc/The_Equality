@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
         String code = String.valueOf(preferences.getNumberDomain().getCode());
         SpannableString title = new SpannableString(getString(R.string.menu_number_domain_with_code, code));
         int start = title.length() - code.length();
-        title.setSpan(new ForegroundColorSpan(getColor(R.color.text_primary)), start, title.length(),
+        title.setSpan(new ForegroundColorSpan(getColor(R.color.text_secondary)), start, title.length(),
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         title.setSpan(new StyleSpan(Typeface.BOLD), start, title.length(),
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
