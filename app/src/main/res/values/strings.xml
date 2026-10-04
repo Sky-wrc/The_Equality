@@ -6,6 +6,8 @@
     <string name="content_description_search">Search</string>
     <string name="content_description_add">Add equation</string>
     <string name="content_description_more">More options</string>
+    <string name="content_description_add_favorite">Add to favorites</string>
+    <string name="content_description_remove_favorite">Remove from favorites</string>
     <string name="parameter_count_format">%1$d par.</string>
     <string name="no_results">No results</string>
     <string name="coming_soon">Coming soon</string>

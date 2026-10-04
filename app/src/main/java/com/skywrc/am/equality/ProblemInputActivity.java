@@ -188,6 +188,7 @@ public class ProblemInputActivity extends AppCompatActivity {
 
     private void hideResult() {
         resultCard.setVisibility(View.GONE);
+        functionButton.setVisibility(View.GONE);
         analysisCard.setVisibility(View.GONE);
     }
 

@@ -70,8 +70,9 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        adapter = new ProblemAdapter(this::openProblem);
-        adapter.submitSource(ProblemRepository.getSampleProblems(this), this::updateEmptyState);
+        adapter = new ProblemAdapter(this::openProblem, this::toggleFavorite);
+        adapter.submitSource(ProblemRepository.getSampleProblems(this),
+                preferences.getFavoriteProblemIds(), this::updateEmptyState);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(adapter);
 
@@ -197,6 +198,12 @@ public class MainActivity extends AppCompatActivity {
             imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
         }
         searchInput.clearFocus();
+    }
+
+    private void toggleFavorite(@NonNull Problem problem) {
+        boolean favorite = !preferences.getFavoriteProblemIds().contains(problem.getId());
+        preferences.setFavorite(problem.getId(), favorite);
+        adapter.setFavorites(preferences.getFavoriteProblemIds(), this::updateEmptyState);
     }
 
     private void updateEmptyState() {
