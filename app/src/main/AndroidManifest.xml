@@ -23,7 +23,7 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity
-            android:name=".CoefficientInputActivity"
+            android:name=".ProblemInputActivity"
             android:exported="false" />
     </application>
 

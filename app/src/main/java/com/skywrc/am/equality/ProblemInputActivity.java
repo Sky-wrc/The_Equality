@@ -2,15 +2,12 @@ package com.skywrc.am.equality;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.InputType;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -23,8 +20,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,23 +27,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CoefficientInputActivity extends AppCompatActivity {
+public class ProblemInputActivity extends AppCompatActivity {
 
     public static final String EXTRA_ID = "extra_id";
     public static final String EXTRA_NAME = "extra_name";
     public static final String EXTRA_FORMULA = "extra_formula";
-    public static final String EXTRA_PARAM_COUNT = "extra_param_count";
+
+    private static final String STATE_CELL_TEXTS = "state_cell_texts";
+    private static final String STATE_RESULT_VISIBLE = "state_result_visible";
 
     private static final String PROBLEM_LINEAR = "linear";
     private static final String PROBLEM_QUADRATIC = "quadratic";
     private static final Set<String> POLYNOMIAL_PROBLEMS =
             new HashSet<>(Arrays.asList(PROBLEM_LINEAR, PROBLEM_QUADRATIC, "cubic"));
 
-    private final List<TextInputLayout> inputLayouts = new ArrayList<>();
-    private final List<TextInputEditText> inputs = new ArrayList<>();
-    private final List<String> labels = new ArrayList<>();
-
     private String problemId;
+    private InputPanel inputPanel;
     private AppPreferences preferences;
     private TextView formulaView;
     private MaterialButton domainButton;
@@ -62,26 +56,30 @@ public class CoefficientInputActivity extends AppCompatActivity {
 
     @NonNull
     public static Intent createIntent(@NonNull Context context, @NonNull Problem problem) {
-        Intent intent = new Intent(context, CoefficientInputActivity.class);
+        Intent intent = new Intent(context, ProblemInputActivity.class);
         intent.putExtra(EXTRA_ID, problem.getId());
         intent.putExtra(EXTRA_NAME, problem.getName());
         intent.putExtra(EXTRA_FORMULA, problem.getFormula());
-        intent.putExtra(EXTRA_PARAM_COUNT, problem.getParameterCount());
+        problem.getInputShape().writeTo(intent);
         return intent;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, R.anim.slide_in_right, R.anim.slide_out_left);
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, R.anim.slide_in_left, R.anim.slide_out_right);
+        }
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_coefficient_input);
+        setContentView(R.layout.activity_problem_input);
 
         preferences = new AppPreferences(this);
 
-        View root = findViewById(R.id.coefficient_root);
+        View root = findViewById(R.id.problem_input_root);
         View headerBar = findViewById(R.id.header_bar);
         View calculateButton = findViewById(R.id.btn_calculate);
-        scrollView = findViewById(R.id.coefficients_scroll);
+        scrollView = findViewById(R.id.input_scroll);
         resultCard = findViewById(R.id.result_card);
         resultDomainView = findViewById(R.id.result_domain);
         resultDiscriminantView = findViewById(R.id.result_discriminant);
@@ -93,7 +91,7 @@ public class CoefficientInputActivity extends AppCompatActivity {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             headerBar.setPadding(
                     headerBar.getPaddingLeft(),
-                    systemBars.top + dpToPx(4),
+                    systemBars.top + dpToPx(8),
                     headerBar.getPaddingRight(),
                     headerBar.getPaddingBottom()
             );
@@ -101,10 +99,10 @@ public class CoefficientInputActivity extends AppCompatActivity {
             return insets;
         });
 
-        problemId = getIntent().getStringExtra(EXTRA_ID);
+        String id = getIntent().getStringExtra(EXTRA_ID);
+        problemId = id != null ? id : "";
         String name = getIntent().getStringExtra(EXTRA_NAME);
         String formula = getIntent().getStringExtra(EXTRA_FORMULA);
-        int paramCount = getIntent().getIntExtra(EXTRA_PARAM_COUNT, 0);
 
         TextView nameView = findViewById(R.id.problem_name);
         formulaView = findViewById(R.id.problem_formula);
@@ -123,12 +121,49 @@ public class CoefficientInputActivity extends AppCompatActivity {
             }
         }));
 
-        LinearLayout container = findViewById(R.id.coefficients_container);
-        for (int i = 0; i < paramCount; i++) {
-            String label = coefficientLabel(i);
-            labels.add(label);
-            container.addView(createCoefficientField(label));
+        inputPanel = InputPanel.create(this, InputShape.readFrom(getIntent()));
+        List<String> savedTexts = savedInstanceState != null
+                ? savedInstanceState.getStringArrayList(STATE_CELL_TEXTS)
+                : InputDraftStore.load(problemId);
+        if (savedTexts != null) {
+            inputPanel.setCellTexts(savedTexts);
         }
+        inputPanel.setOnValuesChangedListener(() -> {
+            resultCard.setVisibility(View.GONE);
+            updateFormula();
+            InputDraftStore.save(problemId, inputPanel.getCellTexts());
+        });
+        ViewGroup container = findViewById(R.id.input_container);
+        container.addView(inputPanel.getView());
+        updateFormula();
+
+        findViewById(R.id.btn_reset).setOnClickListener(v -> resetInput());
+
+        if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_RESULT_VISIBLE)) {
+            calculate();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList(STATE_CELL_TEXTS, inputPanel.getCellTexts());
+        outState.putBoolean(STATE_RESULT_VISIBLE, resultCard.getVisibility() == View.VISIBLE);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void finish() {
+        super.finish();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        }
+    }
+
+    private void resetInput() {
+        inputPanel.clear();
+        InputDraftStore.remove(problemId);
+        resultCard.setVisibility(View.GONE);
         updateFormula();
     }
 
@@ -137,19 +172,22 @@ public class CoefficientInputActivity extends AppCompatActivity {
     }
 
     private void updateFormula() {
-        if (!POLYNOMIAL_PROBLEMS.contains(problemId) || inputs.isEmpty()) {
+        InputShape shape = inputPanel.getShape();
+        if (!POLYNOMIAL_PROBLEMS.contains(problemId)
+                || shape.getKind() != InputShape.Kind.COEFFICIENTS
+                || shape.getCellCount() == 0) {
             return;
         }
-        List<Double> values = new ArrayList<>();
-        for (TextInputEditText input : inputs) {
-            values.add(FormulaRenderer.parse(input.getText()));
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < shape.getCellCount(); i++) {
+            labels.add(shape.getCellLabel(i));
         }
-        formulaView.setText(FormulaRenderer.render(labels, values));
+        formulaView.setText(FormulaRenderer.render(labels, inputPanel.peekValues()));
     }
 
     private void calculate() {
-        double[] coefficients = readCoefficients();
-        if (coefficients == null) {
+        InputValues values = inputPanel.readValues();
+        if (values == null) {
             return;
         }
         hideKeyboard();
@@ -157,7 +195,7 @@ public class CoefficientInputActivity extends AppCompatActivity {
         NumberDomain domain = preferences.getNumberDomain();
         resultDomainView.setText(getString(R.string.result_domain, getString(domain.getLabelResId())));
 
-        SolveResult result = solve(coefficients, domain.getCode());
+        SolveResult result = solve(values, domain.getCode());
         if (result == null) {
             resultDiscriminantView.setVisibility(View.GONE);
             resultSqrtDiscriminantView.setVisibility(View.GONE);
@@ -172,7 +210,8 @@ public class CoefficientInputActivity extends AppCompatActivity {
     }
 
     @Nullable
-    private SolveResult solve(@NonNull double[] k, char domain) {
+    private SolveResult solve(@NonNull InputValues values, char domain) {
+        double[] k = values.toArray();
         if (PROBLEM_LINEAR.equals(problemId) && k.length == 2) {
             double[] raw = NativeSolver.linear(k[0], k[1], domain);
             return SolveResultDecoder.decodeLinear(k[0], k[1], domain, raw);
@@ -276,30 +315,6 @@ public class CoefficientInputActivity extends AppCompatActivity {
         return magnitude == 1 ? "i" : NumberFormatter.format(magnitude) + "i";
     }
 
-    @Nullable
-    private double[] readCoefficients() {
-        double[] values = new double[inputs.size()];
-        boolean valid = true;
-        for (int i = 0; i < inputs.size(); i++) {
-            TextInputLayout layout = inputLayouts.get(i);
-            CharSequence text = inputs.get(i).getText();
-            if (text == null || text.toString().trim().isEmpty()) {
-                layout.setError(getString(R.string.error_enter_coefficient, labels.get(i)));
-                valid = false;
-                continue;
-            }
-            Double value = FormulaRenderer.parse(text);
-            if (value == null) {
-                layout.setError(getString(R.string.error_invalid_number));
-                valid = false;
-                continue;
-            }
-            values[i] = value;
-            layout.setError(null);
-        }
-        return valid ? values : null;
-    }
-
     private void hideKeyboard() {
         View focused = getCurrentFocus();
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -307,65 +322,6 @@ public class CoefficientInputActivity extends AppCompatActivity {
             imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
             focused.clearFocus();
         }
-    }
-
-    @NonNull
-    private View createCoefficientField(@NonNull String label) {
-        TextInputLayout inputLayout = new TextInputLayout(
-                this,
-                null,
-                com.google.android.material.R.attr.textInputOutlinedStyle
-        );
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        layoutParams.bottomMargin = dpToPx(12);
-        inputLayout.setLayoutParams(layoutParams);
-        inputLayout.setHint(getString(R.string.coefficient_hint, label));
-        inputLayout.setBoxBackgroundColor(getColor(R.color.surface_card));
-        inputLayout.setDefaultHintTextColor(
-                getColorStateList(R.color.text_secondary)
-        );
-
-        TextInputEditText editText = new TextInputEditText(inputLayout.getContext());
-        editText.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        editText.setInputType(InputType.TYPE_CLASS_NUMBER
-                | InputType.TYPE_NUMBER_FLAG_DECIMAL
-                | InputType.TYPE_NUMBER_FLAG_SIGNED);
-        editText.setTextColor(getColor(R.color.text_primary));
-        editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                inputLayout.setError(null);
-                resultCard.setVisibility(View.GONE);
-                updateFormula();
-            }
-        });
-        inputLayout.addView(editText);
-
-        inputLayouts.add(inputLayout);
-        inputs.add(editText);
-        return inputLayout;
-    }
-
-    @NonNull
-    private static String coefficientLabel(int index) {
-        if (index < 26) {
-            return String.valueOf((char) ('a' + index));
-        }
-        return "p" + (index + 1);
     }
 
     private int dpToPx(int dp) {

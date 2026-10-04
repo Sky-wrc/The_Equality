@@ -14,7 +14,7 @@
 
     <style name="Theme.The_Equality.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_empty</item>
         <item name="postSplashScreenTheme">@style/Theme.The_Equality</item>
     </style>
 
@@ -36,6 +36,8 @@
         <item name="colorSurface">@color/surface_card</item>
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="colorPrimary">@color/accent</item>
+        <item name="android:listChoiceIndicatorSingle">@drawable/radio_indicator</item>
+        <item name="android:textColorAlertDialogListItem">@color/text_primary</item>
         <item name="materialAlertDialogTitleTextStyle">@style/TextAppearance.The_Equality.DialogTitle</item>
         <item name="materialAlertDialogBodyTextStyle">@style/TextAppearance.The_Equality.DialogBody</item>
     </style>

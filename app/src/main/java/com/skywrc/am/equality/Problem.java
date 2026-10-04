@@ -5,13 +5,13 @@ public class Problem {
     private final String id;
     private final String name;
     private final String formula;
-    private final int parameterCount;
+    private final InputShape inputShape;
 
-    public Problem(String id, String name, String formula, int parameterCount) {
+    public Problem(String id, String name, String formula, InputShape inputShape) {
         this.id = id;
         this.name = name;
         this.formula = formula;
-        this.parameterCount = parameterCount;
+        this.inputShape = inputShape;
     }
 
     public String getId() {
@@ -26,7 +26,11 @@ public class Problem {
         return formula;
     }
 
+    public InputShape getInputShape() {
+        return inputShape;
+    }
+
     public int getParameterCount() {
-        return parameterCount;
+        return inputShape.getCellCount();
     }
 }

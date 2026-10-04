@@ -12,6 +12,7 @@
     <string name="ok">OK</string>
     <string name="calculate">Calculate</string>
     <string name="content_description_back">Back</string>
+    <string name="content_description_reset">Reset all fields</string>
     <string name="coefficient_hint">Enter %1$s</string>
     <string name="error_enter_coefficient">Enter %1$s</string>
     <string name="error_invalid_number">Invalid number</string>

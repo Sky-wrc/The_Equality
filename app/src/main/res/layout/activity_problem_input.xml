@@ -2,11 +2,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/coefficient_root"
+    android:id="@+id/problem_input_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    tools:context=".CoefficientInputActivity">
+    tools:context=".ProblemInputActivity">
 
     <LinearLayout
         android:id="@+id/header_bar"
@@ -36,22 +36,39 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
             android:maxLines="2"
+            android:minHeight="48dp"
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
             tools:text="quadratic equation" />
 
+        <ImageButton
+            android:id="@+id/btn_reset"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/content_description_reset"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_reset_24" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_domain"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:contentDescription="@string/content_description_change_domain"
+            android:includeFontPadding="false"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:minWidth="48dp"
+            android:minHeight="0dp"
             android:paddingHorizontal="12dp"
+            android:paddingVertical="0dp"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -74,7 +91,7 @@
         tools:text="ax²+bx+c=0" />
 
     <ScrollView
-        android:id="@+id/coefficients_scroll"
+        android:id="@+id/input_scroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
@@ -93,7 +110,7 @@
             android:paddingBottom="16dp">
 
             <LinearLayout
-                android:id="@+id/coefficients_container"
+                android:id="@+id/input_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />

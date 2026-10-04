@@ -21,19 +21,19 @@ public final class ProblemRepository {
                         "linear",
                         context.getString(R.string.problem_linear_name),
                         context.getString(R.string.problem_linear_formula),
-                        2
+                        InputShape.coefficients(2)
                 ),
                 new Problem(
                         "quadratic",
                         context.getString(R.string.problem_quadratic_name),
                         context.getString(R.string.problem_quadratic_formula),
-                        3
+                        InputShape.coefficients(3)
                 ),
                 new Problem(
                         "cubic",
                         context.getString(R.string.problem_cubic_name),
                         context.getString(R.string.problem_cubic_formula),
-                        4
+                        InputShape.coefficients(4)
                 )
         )));
     }

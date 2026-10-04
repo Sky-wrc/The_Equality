@@ -2,6 +2,7 @@ package com.skywrc.am.equality;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -69,9 +70,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        adapter = new ProblemAdapter(problem ->
-                startActivity(CoefficientInputActivity.createIntent(this, problem))
-        );
+        adapter = new ProblemAdapter(this::openProblem);
         adapter.submitSource(ProblemRepository.getSampleProblems(this), this::updateEmptyState);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(adapter);
@@ -103,6 +102,22 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    @SuppressWarnings("deprecation")
+    private void openProblem(@NonNull Problem problem) {
+        startActivity(ProblemInputActivity.createIntent(this, problem));
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (isFinishing()) {
+            InputDraftStore.clear();
+        }
+        super.onDestroy();
     }
 
     private void showOverflowMenu(View anchor) {
