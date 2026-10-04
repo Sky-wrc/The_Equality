@@ -32,6 +32,21 @@
     <string name="result_undetermined">Roots cannot be determined in the selected number domain</string>
     <string name="result_solver_unavailable">Solver not available yet</string>
 
+    <string name="function_button">F(x)</string>
+    <string name="analysis_title">Function analysis</string>
+    <string name="analysis_function">F(x) = %1$s</string>
+    <string name="analysis_graph_line">Graph: straight line</string>
+    <string name="analysis_graph_parabola">Graph: parabola</string>
+    <string name="analysis_branches_up">Branches point up (a &gt; 0)</string>
+    <string name="analysis_branches_down">Branches point down (a &lt; 0)</string>
+    <string name="analysis_positive">F(x) &gt; 0: x ∈ %1$s</string>
+    <string name="analysis_negative">F(x) &lt; 0: x ∈ %1$s</string>
+    <string name="analysis_zero">F(x) = 0: x ∈ %1$s</string>
+    <string name="analysis_minimum">Minimum: F(%1$s) = %2$s</string>
+    <string name="analysis_maximum">Maximum: F(%1$s) = %2$s</string>
+    <string name="analysis_increasing">Increasing: x ∈ %1$s</string>
+    <string name="analysis_decreasing">Decreasing: x ∈ %1$s</string>
+
     <string name="menu_about">About the app</string>
     <string name="menu_number_domain">Number domain</string>
     <string name="menu_number_domain_with_code">Number domain\u2002\u2002%1$s</string>

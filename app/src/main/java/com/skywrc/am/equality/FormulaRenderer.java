@@ -21,6 +21,12 @@ public final class FormulaRenderer {
 
     @NonNull
     public static String render(@NonNull List<String> labels, @NonNull List<Double> values) {
+        return renderExpression(labels, values) + "=0";
+    }
+
+    /** The left-hand side only, e.g. "x²−3x+2". */
+    @NonNull
+    public static String renderExpression(@NonNull List<String> labels, @NonNull List<Double> values) {
         int degree = labels.size() - 1;
         StringBuilder formula = new StringBuilder();
         for (int i = 0; i < labels.size(); i++) {
@@ -50,7 +56,7 @@ public final class FormulaRenderer {
         if (formula.length() == 0) {
             formula.append('0');
         }
-        return formula.append("=0").toString();
+        return formula.toString();
     }
 
     @Nullable

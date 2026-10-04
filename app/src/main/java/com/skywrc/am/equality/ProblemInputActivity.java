@@ -35,6 +35,7 @@ public class ProblemInputActivity extends AppCompatActivity {
 
     private static final String STATE_CELL_TEXTS = "state_cell_texts";
     private static final String STATE_RESULT_VISIBLE = "state_result_visible";
+    private static final String STATE_ANALYSIS_VISIBLE = "state_analysis_visible";
 
     private static final String PROBLEM_LINEAR = "linear";
     private static final String PROBLEM_QUADRATIC = "quadratic";
@@ -53,6 +54,12 @@ public class ProblemInputActivity extends AppCompatActivity {
     private TextView resultSqrtDiscriminantView;
     private TextView resultBodyView;
     private TextView resultDivisionView;
+    private View functionButton;
+    private View analysisCard;
+    private TextView analysisFunctionView;
+    private TextView analysisGraphView;
+    private TextView analysisSignsView;
+    private TextView analysisBehaviorView;
 
     @NonNull
     public static Intent createIntent(@NonNull Context context, @NonNull Problem problem) {
@@ -86,6 +93,13 @@ public class ProblemInputActivity extends AppCompatActivity {
         resultSqrtDiscriminantView = findViewById(R.id.result_sqrt_discriminant);
         resultBodyView = findViewById(R.id.result_body);
         resultDivisionView = findViewById(R.id.result_division);
+        functionButton = findViewById(R.id.btn_function);
+        analysisCard = findViewById(R.id.analysis_card);
+        analysisFunctionView = findViewById(R.id.analysis_function);
+        analysisGraphView = findViewById(R.id.analysis_graph);
+        analysisSignsView = findViewById(R.id.analysis_signs);
+        analysisBehaviorView = findViewById(R.id.analysis_behavior);
+        functionButton.setOnClickListener(v -> toggleAnalysis());
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -129,7 +143,7 @@ public class ProblemInputActivity extends AppCompatActivity {
             inputPanel.setCellTexts(savedTexts);
         }
         inputPanel.setOnValuesChangedListener(() -> {
-            resultCard.setVisibility(View.GONE);
+            hideResult();
             updateFormula();
             InputDraftStore.save(problemId, inputPanel.getCellTexts());
         });
@@ -141,6 +155,10 @@ public class ProblemInputActivity extends AppCompatActivity {
 
         if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_RESULT_VISIBLE)) {
             calculate();
+            if (savedInstanceState.getBoolean(STATE_ANALYSIS_VISIBLE)
+                    && functionButton.getVisibility() == View.VISIBLE) {
+                analysisCard.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -149,6 +167,7 @@ public class ProblemInputActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putStringArrayList(STATE_CELL_TEXTS, inputPanel.getCellTexts());
         outState.putBoolean(STATE_RESULT_VISIBLE, resultCard.getVisibility() == View.VISIBLE);
+        outState.putBoolean(STATE_ANALYSIS_VISIBLE, analysisCard.getVisibility() == View.VISIBLE);
     }
 
     @Override
@@ -163,8 +182,22 @@ public class ProblemInputActivity extends AppCompatActivity {
     private void resetInput() {
         inputPanel.clear();
         InputDraftStore.remove(problemId);
-        resultCard.setVisibility(View.GONE);
+        hideResult();
         updateFormula();
+    }
+
+    private void hideResult() {
+        resultCard.setVisibility(View.GONE);
+        analysisCard.setVisibility(View.GONE);
+    }
+
+    private void toggleAnalysis() {
+        if (analysisCard.getVisibility() == View.VISIBLE) {
+            analysisCard.setVisibility(View.GONE);
+            return;
+        }
+        analysisCard.setVisibility(View.VISIBLE);
+        scrollView.post(() -> scrollView.smoothScrollTo(0, analysisCard.getBottom()));
     }
 
     private void updateDomainButton() {
@@ -178,11 +211,17 @@ public class ProblemInputActivity extends AppCompatActivity {
                 || shape.getCellCount() == 0) {
             return;
         }
+        formulaView.setText(FormulaRenderer.render(cellLabels(), inputPanel.peekValues()));
+    }
+
+    @NonNull
+    private List<String> cellLabels() {
+        InputShape shape = inputPanel.getShape();
         List<String> labels = new ArrayList<>();
         for (int i = 0; i < shape.getCellCount(); i++) {
             labels.add(shape.getCellLabel(i));
         }
-        formulaView.setText(FormulaRenderer.render(labels, inputPanel.peekValues()));
+        return labels;
     }
 
     private void calculate() {
@@ -205,6 +244,17 @@ public class ProblemInputActivity extends AppCompatActivity {
             showResult(result);
         }
 
+        FunctionAnalysis analysis = domain == NumberDomain.REALS && result != null
+                ? analyze(values, result)
+                : null;
+        if (analysis == null) {
+            functionButton.setVisibility(View.GONE);
+            analysisCard.setVisibility(View.GONE);
+        } else {
+            bindAnalysis(values, analysis);
+            functionButton.setVisibility(View.VISIBLE);
+        }
+
         resultCard.setVisibility(View.VISIBLE);
         scrollView.post(() -> scrollView.smoothScrollTo(0, resultCard.getBottom()));
     }
@@ -221,6 +271,73 @@ public class ProblemInputActivity extends AppCompatActivity {
             return SolveResultDecoder.decodeQuadratic(k[0], k[1], k[2], domain, raw);
         }
         return null;
+    }
+
+    @Nullable
+    private FunctionAnalysis analyze(@NonNull InputValues values, @NonNull SolveResult result) {
+        double[] k = values.toArray();
+        List<Double> roots = new ArrayList<>();
+        for (SolveResult.Root root : result.getRoots()) {
+            roots.add(root.getRe());
+        }
+        if (PROBLEM_LINEAR.equals(problemId) && k.length == 2) {
+            if (k[0] != 0 && roots.isEmpty()) {
+                return null;
+            }
+            return FunctionAnalysis.linear(k[0], k[1], roots.isEmpty() ? 0 : roots.get(0));
+        }
+        if (PROBLEM_QUADRATIC.equals(problemId) && k.length == 3 && k[0] != 0) {
+            // The vertex is the root of F'(x) = 2ax + b.
+            char reals = NumberDomain.REALS.getCode();
+            double[] raw = NativeSolver.linear(2 * k[0], k[1], reals);
+            SolveResult derivative = SolveResultDecoder.decodeLinear(2 * k[0], k[1], reals, raw);
+            if (derivative.getRoots().isEmpty()) {
+                return null;
+            }
+            return FunctionAnalysis.quadratic(k[0], k[1], k[2], roots, derivative.getRoots().get(0).getRe());
+        }
+        return null;
+    }
+
+    private void bindAnalysis(@NonNull InputValues values, @NonNull FunctionAnalysis analysis) {
+        List<Double> coefficients = new ArrayList<>();
+        for (double value : values.toArray()) {
+            coefficients.add(value);
+        }
+        analysisFunctionView.setText(getString(R.string.analysis_function,
+                FormulaRenderer.renderExpression(cellLabels(), coefficients)));
+
+        List<String> graph = new ArrayList<>();
+        graph.add(getString(analysis.getGraphType() == FunctionAnalysis.GraphType.PARABOLA
+                ? R.string.analysis_graph_parabola
+                : R.string.analysis_graph_line));
+        if (analysis.getBranches() != null) {
+            graph.add(getString(analysis.getBranches() == FunctionAnalysis.Branches.UP
+                    ? R.string.analysis_branches_up
+                    : R.string.analysis_branches_down));
+        }
+        analysisGraphView.setText(TextUtils.join("\n", graph));
+
+        analysisSignsView.setText(TextUtils.join("\n", Arrays.asList(
+                getString(R.string.analysis_positive, Interval.format(analysis.getPositive())),
+                getString(R.string.analysis_negative, Interval.format(analysis.getNegative())),
+                getString(R.string.analysis_zero, Interval.format(analysis.getZero()))
+        )));
+
+        FunctionAnalysis.ExtremumType extremum = analysis.getExtremumType();
+        if (extremum == null) {
+            analysisBehaviorView.setVisibility(View.GONE);
+            return;
+        }
+        String x = Interval.formatNumber(analysis.getExtremumX());
+        String y = Interval.formatNumber(analysis.getExtremumY());
+        String increasing = getString(R.string.analysis_increasing, Interval.format(analysis.getIncreasing()));
+        String decreasing = getString(R.string.analysis_decreasing, Interval.format(analysis.getDecreasing()));
+        List<String> lines = extremum == FunctionAnalysis.ExtremumType.MINIMUM
+                ? Arrays.asList(getString(R.string.analysis_minimum, x, y), decreasing, increasing)
+                : Arrays.asList(getString(R.string.analysis_maximum, x, y), increasing, decreasing);
+        analysisBehaviorView.setText(TextUtils.join("\n", lines));
+        analysisBehaviorView.setVisibility(View.VISIBLE);
     }
 
     private void showResult(@NonNull SolveResult result) {
