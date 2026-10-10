@@ -15,6 +15,8 @@
     <string name="calculate">Calculate</string>
     <string name="content_description_back">Back</string>
     <string name="content_description_reset">Reset all fields</string>
+    <string name="content_description_simplify_roots_on">Simplify roots: on</string>
+    <string name="content_description_simplify_roots_off">Simplify roots: off</string>
     <string name="coefficient_hint">Enter %1$s</string>
     <string name="error_enter_coefficient">Enter %1$s</string>
     <string name="error_invalid_number">Invalid number</string>
@@ -28,6 +30,7 @@
     <string name="result_modulo">Modulo = %1$s</string>
     <string name="result_root_single">x = %1$s</string>
     <string name="result_root_indexed">x%1$d = %2$s</string>
+    <string name="result_root_form">x1,2 = %1$s</string>
     <string name="result_no_roots">No roots in the selected number domain</string>
     <string name="result_infinite_roots">Infinitely many roots</string>
     <string name="result_not_quadratic">a = 0: not a quadratic equation</string>
@@ -51,6 +54,7 @@
 
     <string name="menu_about">About the app</string>
     <string name="menu_number_domain">Number domain</string>
+    <string name="menu_simplify_roots">Simplify roots</string>
     <string name="menu_number_domain_with_code">Number domain\u2002\u2002%1$s</string>
     <string name="content_description_change_domain">Change number domain</string>
     <string name="about_title">About The Equality</string>

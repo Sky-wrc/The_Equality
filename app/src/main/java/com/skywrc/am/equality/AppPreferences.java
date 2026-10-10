@@ -14,6 +14,7 @@ public final class AppPreferences {
     private static final String PREFS_NAME = "equality_prefs";
     private static final String KEY_NUMBER_DOMAIN = "number_domain";
     private static final String KEY_FAVORITE_PROBLEMS = "favorite_problems";
+    private static final String KEY_SIMPLIFY_ROOTS = "simplify_roots";
 
     private final SharedPreferences preferences;
 
@@ -47,5 +48,13 @@ public final class AppPreferences {
             ids.remove(problemId);
         }
         preferences.edit().putStringSet(KEY_FAVORITE_PROBLEMS, ids).apply();
+    }
+
+    public boolean isSimplifyRoots() {
+        return preferences.getBoolean(KEY_SIMPLIFY_ROOTS, false);
+    }
+
+    public void setSimplifyRoots(boolean simplify) {
+        preferences.edit().putBoolean(KEY_SIMPLIFY_ROOTS, simplify).apply();
     }
 }

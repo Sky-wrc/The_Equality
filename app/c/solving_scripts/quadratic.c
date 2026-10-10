@@ -1,7 +1,8 @@
 #include <math.h>
 #include "../include/mymath.h"
+#include "../include/quadratic.h"
 
-// #define SIZE =10;
+//#define SIZE 10;
 //67=C 78=N 82=R 90=Z
 double discriminant( double a, double b, double c, char M)
 {
@@ -22,7 +23,7 @@ double discriminant( double a, double b, double c, char M)
     
 }
 
-void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, double c, char M)
+void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, double c, char M, bool Rt)
 {
     int g = 1;
     if(a!=0){
@@ -51,11 +52,15 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                 double x1 = min_num(((-b+sqrt(*n3))/(2*a)),((-b-sqrt(*n3))/(2*a)));
                 double x2 = max_num(((-b+sqrt(*n3))/(2*a)),((-b-sqrt(*n3))/(2*a)));
                 if(M=='R')
-                    if(*n3 == 0){ //Discriminant = 0
-                    
-                    n1[0] = x1;
-                    n2[0] = -1; //no second root
-                    //printf("%f %f %f ",*n1, *n2, *n3);
+                    if(Rt==1){
+                        n1[0] = (-b)/(2*a);
+                        n2[0] = -10;
+                        *n3=(*n3*g*g);
+                    }
+                    else if(*n3 == 0){ //Discriminant = 0
+                        n1[0] = x1;
+                        n2[0] = -1; //no second root
+                        
                     }
                     else if(*n3>0) //Discriminant > 0
                     {
@@ -67,20 +72,32 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                     else
                         ;
                 else if (M=='Z')
-                    if(*n3 == 0){ //Discriminant = 0
+                    if(Rt==1){
+                        x1 = (-b)/(a*2);
+                        if(x1 == (int)x1 && *n3== (int)*n3){//not counted integer root
+                            n1[0] = (int)x1;
+                            n2[0] = -10;
+                        }
+                        else{// no integer roots
+                            n1[0] = -0.000001;
+                            n2[0] = -11; 
+                        }
+                        *n3=(*n3*g*g);
+                    }
+                    else if(*n3 == 0){ //Discriminant = 0
                         if(x1 == (int)x1){//no second root
-                            n1[0] = (int)(x1);
+                            n1[0] = (int)x1;
                             n2[0] = -1;
                         }
                         else{// no integer roots
                             n1[0] = 0;
                             n2[0] = -5; 
                         }
-                        *n3 = (int)*n3;
+                        *n3 = *n3*g*g;
                     }
                     else if(*n3>0){ //Discriminant > 0
                         if(x1 == (int)x1){
-                            n1[0] = (int)(x1);
+                            n1[0] = (int)x1;
                         }
                         else{//smaller root is not integer
                             n1[0] = -0.000001;
@@ -99,7 +116,19 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                         ;
                 else if(M=='N')
                     //printf("%f %f %f ",*n1, *n2, *n3);
-                    if(*n3 == 0){ //Discriminant = 0
+                    if(Rt==1){
+                        x1 = (-b)/(2*a);
+                        if(x1 == (int)x1 && x1 > 0 && *n3== (int)*n3){//not counted natural root
+                            n1[0] = (int)x1;
+                            n2[0] = -12;
+                        }
+                        else{// no natural roots
+                            n1[0] = 0;
+                            n2[0] = -13; 
+                        }
+                        *n3=(*n3*g*g);
+                    }
+                    else if(*n3 == 0){ //Discriminant = 0
                         if(x1 == (int)x1 && x1 > 0){//no second root
                             n1[0] = (int)(x1);
                             n2[0] = -1;
@@ -108,7 +137,7 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                             n1[0] = 0;
                             n2[0] = -8; 
                         }
-                        *n3 = (int)*n3;
+                        *n3 = *n3*g*g;
                     }
                     else if(*n3>0){//Discriminant > 0
                         
@@ -124,7 +153,7 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
                         else{//bigger root is not natural
                             n2[0] = -4;
                         }
-                        *n3 = (int)(*n3*g*g);
+                        *n3 = (*n3*g*g);
                         
                     }
                     else;
@@ -132,7 +161,14 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
         }
         else if(M=='C')
         {   
-            if (*n3 >=0){
+            if(Rt==1)
+            {
+                double x1 = (-b)/(2*a);
+                n1[0] = x1;
+                n2[0] = -14;
+                *n3=(*n3*g*g);
+            }
+            else if (*n3 >=0){
                 double x1 = min_num(((-b+sqrt(*n3))/(2*a)),((-b-sqrt(*n3))/(2*a)));
                 double x2 = max_num(((-b+sqrt(*n3))/(2*a)),((-b-sqrt(*n3))/(2*a)));
                 if(*n3==0){ // one uncoplex root
@@ -166,6 +202,7 @@ void quadratic_solver(double* n1, double* n2, double* n3, double a, double b, do
         n2[0] = -2;
         *n3 = -2;
     }
+    return;
 }
 
 // int main()

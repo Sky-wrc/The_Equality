@@ -10,6 +10,8 @@ public final class SolveResult {
 
     public enum Status {
         ROOTS,
+        /** Roots are -b/2a ± √D/2a; only the center -b/2a and D are known. */
+        ROOT_FORM,
         NO_ROOTS,
         INFINITE_ROOTS,
         NOT_QUADRATIC,
@@ -43,26 +45,35 @@ public final class SolveResult {
     private final Double quotient;
     @Nullable
     private final Double modulo;
+    @Nullable
+    private final Double center;
 
     SolveResult(@NonNull Status status, @NonNull List<Root> roots,
                 @Nullable Double discriminant, boolean discriminantNegative) {
-        this(status, roots, discriminant, discriminantNegative, null, null);
+        this(status, roots, discriminant, discriminantNegative, null, null, null);
     }
 
     private SolveResult(@NonNull Status status, @NonNull List<Root> roots,
                         @Nullable Double discriminant, boolean discriminantNegative,
-                        @Nullable Double quotient, @Nullable Double modulo) {
+                        @Nullable Double quotient, @Nullable Double modulo, @Nullable Double center) {
         this.status = status;
         this.roots = Collections.unmodifiableList(roots);
         this.discriminant = discriminant;
         this.discriminantNegative = discriminantNegative;
         this.quotient = quotient;
         this.modulo = modulo;
+        this.center = center;
+    }
+
+    @NonNull
+    static SolveResult rootForm(double center, double discriminant) {
+        return new SolveResult(Status.ROOT_FORM, Collections.emptyList(), discriminant, false,
+                null, null, center);
     }
 
     @NonNull
     SolveResult withDivision(@Nullable Double quotient, @Nullable Double modulo) {
-        return new SolveResult(status, roots, discriminant, discriminantNegative, quotient, modulo);
+        return new SolveResult(status, roots, discriminant, discriminantNegative, quotient, modulo, center);
     }
 
     @NonNull
@@ -95,5 +106,11 @@ public final class SolveResult {
     @Nullable
     public Double getModulo() {
         return modulo;
+    }
+
+    /** -b/2a for {@link Status#ROOT_FORM}, otherwise null. */
+    @Nullable
+    public Double getCenter() {
+        return center;
     }
 }

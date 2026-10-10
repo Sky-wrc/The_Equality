@@ -11,6 +11,7 @@ import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.view.ContextThemeWrapper;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -129,19 +130,47 @@ public class MainActivity extends AppCompatActivity {
         PopupMenu popupMenu = new PopupMenu(wrapper, anchor);
         popupMenu.getMenuInflater().inflate(R.menu.menu_overflow, popupMenu.getMenu());
         popupMenu.getMenu().findItem(R.id.action_number_domain).setTitle(numberDomainMenuTitle());
+        popupMenu.getMenu().findItem(R.id.action_simplify_roots).setChecked(preferences.isSimplifyRoots());
+        for (int i = 0; i < popupMenu.getMenu().size(); i++) {
+            keepMenuOpenOnClick(popupMenu.getMenu().getItem(i), wrapper);
+        }
+        // Returning false keeps the popup open (see keepMenuOpenOnClick).
         popupMenu.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
             if (id == R.id.action_about) {
                 showAboutDialog();
-                return true;
-            }
-            if (id == R.id.action_number_domain) {
-                showNumberDomainDialog();
-                return true;
+            } else if (id == R.id.action_number_domain) {
+                showNumberDomainDialog(() -> popupMenu.getMenu()
+                        .findItem(R.id.action_number_domain)
+                        .setTitle(numberDomainMenuTitle()));
+            } else if (id == R.id.action_simplify_roots) {
+                boolean simplify = !item.isChecked();
+                item.setChecked(simplify);
+                preferences.setSimplifyRoots(simplify);
             }
             return false;
         });
         popupMenu.show();
+    }
+
+    /**
+     * A popup closes after a click unless the item has a collapsible action view whose expansion
+     * is refused and the click itself is reported as not handled.
+     */
+    private static void keepMenuOpenOnClick(@NonNull MenuItem item, @NonNull Context context) {
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        item.setActionView(new View(context));
+        item.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(@NonNull MenuItem menuItem) {
+                return false;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(@NonNull MenuItem menuItem) {
+                return false;
+            }
+        });
     }
 
     private void showAboutDialog() {
@@ -152,8 +181,8 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void showNumberDomainDialog() {
-        NumberDomainDialog.show(this, preferences, selected -> { });
+    private void showNumberDomainDialog(@NonNull Runnable onSelected) {
+        NumberDomainDialog.show(this, preferences, selected -> onSelected.run());
     }
 
     @NonNull

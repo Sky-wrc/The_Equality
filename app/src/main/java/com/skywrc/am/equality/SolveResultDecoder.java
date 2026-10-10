@@ -18,6 +18,9 @@ public final class SolveResultDecoder {
     private static final double N_BIGGER_NOT_NATURAL = -4;
     private static final double N_NO_MODULO = -4;
     private static final double Z_NO_MODULO = -4.1;
+    private static final double RT_REAL_OR_INTEGER_FORM = -10;
+    private static final double RT_NATURAL_FORM = -12;
+    private static final double RT_COMPLEX_FORM = -14;
     private static final double ROOT_EPSILON = 1e-9;
 
     private SolveResultDecoder() {
@@ -69,7 +72,7 @@ public final class SolveResultDecoder {
 
     @NonNull
     public static SolveResult decodeQuadratic(double a, double b, double c, char domain,
-                                              @NonNull double[] raw) {
+                                              boolean rootForm, @NonNull double[] raw) {
         double n1Re = raw[0];
         double n1Im = raw[1];
         double n2Re = raw[2];
@@ -78,6 +81,10 @@ public final class SolveResultDecoder {
 
         if (a == 0) {
             return result(SolveResult.Status.NOT_QUADRATIC, new ArrayList<>(), null, false);
+        }
+
+        if (rootForm) {
+            return decodeQuadraticRootForm(domain, n1Re, n2Re, n3);
         }
 
         if (domain == 'C') {
@@ -141,6 +148,36 @@ public final class SolveResultDecoder {
             default:
                 return undetermined();
         }
+    }
+
+    /**
+     * With Rt = 1 quadratic_solver writes -b/2a to n1 and a marker to n2:
+     * -10 in R and Z, -12 in N, -14 in C; -11 (Z) and -13 (N) mean no suitable roots.
+     */
+    @NonNull
+    private static SolveResult decodeQuadraticRootForm(char domain, double n1, double n2, double n3) {
+        if (domain != 'C' && n3 < 0) {
+            return noRoots(null, true);
+        }
+        double formMarker;
+        switch (domain) {
+            case 'R':
+            case 'Z':
+                formMarker = RT_REAL_OR_INTEGER_FORM;
+                break;
+            case 'N':
+                formMarker = RT_NATURAL_FORM;
+                break;
+            case 'C':
+                formMarker = RT_COMPLEX_FORM;
+                break;
+            default:
+                return undetermined();
+        }
+        if (n2 != formMarker) {
+            return noRoots(n3, false);
+        }
+        return n3 == 0 ? roots(single(n1), n3) : SolveResult.rootForm(n1, n3);
     }
 
     @NonNull

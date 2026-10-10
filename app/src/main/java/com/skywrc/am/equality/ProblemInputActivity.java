@@ -2,12 +2,14 @@ package com.skywrc.am.equality;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -18,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.widget.ImageViewCompat;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -47,6 +50,7 @@ public class ProblemInputActivity extends AppCompatActivity {
     private AppPreferences preferences;
     private TextView formulaView;
     private MaterialButton domainButton;
+    private ImageButton simplifyRootsButton;
     private ScrollView scrollView;
     private View resultCard;
     private TextView resultDomainView;
@@ -153,6 +157,16 @@ public class ProblemInputActivity extends AppCompatActivity {
 
         findViewById(R.id.btn_reset).setOnClickListener(v -> resetInput());
 
+        simplifyRootsButton = findViewById(R.id.btn_simplify_roots);
+        updateSimplifyRootsButton();
+        simplifyRootsButton.setOnClickListener(v -> {
+            preferences.setSimplifyRoots(!preferences.isSimplifyRoots());
+            updateSimplifyRootsButton();
+            if (resultCard.getVisibility() == View.VISIBLE) {
+                calculate();
+            }
+        });
+
         if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_RESULT_VISIBLE)) {
             calculate();
             if (savedInstanceState.getBoolean(STATE_ANALYSIS_VISIBLE)
@@ -205,6 +219,15 @@ public class ProblemInputActivity extends AppCompatActivity {
         domainButton.setText(String.valueOf(preferences.getNumberDomain().getCode()));
     }
 
+    private void updateSimplifyRootsButton() {
+        boolean simplify = preferences.isSimplifyRoots();
+        ImageViewCompat.setImageTintList(simplifyRootsButton, ColorStateList.valueOf(
+                getColor(simplify ? R.color.accent : R.color.text_secondary)));
+        simplifyRootsButton.setContentDescription(getString(simplify
+                ? R.string.content_description_simplify_roots_on
+                : R.string.content_description_simplify_roots_off));
+    }
+
     private void updateFormula() {
         InputShape shape = inputPanel.getShape();
         if (!POLYNOMIAL_PROBLEMS.contains(problemId)
@@ -235,18 +258,21 @@ public class ProblemInputActivity extends AppCompatActivity {
         NumberDomain domain = preferences.getNumberDomain();
         resultDomainView.setText(getString(R.string.result_domain, getString(domain.getLabelResId())));
 
-        SolveResult result = solve(values, domain.getCode());
+        boolean rootForm = preferences.isSimplifyRoots();
+        SolveResult result = solve(values, domain.getCode(), rootForm);
         if (result == null) {
             resultDiscriminantView.setVisibility(View.GONE);
             resultSqrtDiscriminantView.setVisibility(View.GONE);
             resultDivisionView.setVisibility(View.GONE);
             resultBodyView.setText(R.string.result_solver_unavailable);
         } else {
-            showResult(result);
+            showResult(result, values.toArray()[0]);
         }
 
-        FunctionAnalysis analysis = domain == NumberDomain.REALS && result != null
-                ? analyze(values, result)
+        // The analysis needs the explicit roots, which the root form doesn't contain.
+        SolveResult explicitResult = rootForm ? solve(values, domain.getCode(), false) : result;
+        FunctionAnalysis analysis = domain == NumberDomain.REALS && explicitResult != null
+                ? analyze(values, explicitResult)
                 : null;
         if (analysis == null) {
             functionButton.setVisibility(View.GONE);
@@ -261,15 +287,15 @@ public class ProblemInputActivity extends AppCompatActivity {
     }
 
     @Nullable
-    private SolveResult solve(@NonNull InputValues values, char domain) {
+    private SolveResult solve(@NonNull InputValues values, char domain, boolean rootForm) {
         double[] k = values.toArray();
         if (PROBLEM_LINEAR.equals(problemId) && k.length == 2) {
             double[] raw = NativeSolver.linear(k[0], k[1], domain);
             return SolveResultDecoder.decodeLinear(k[0], k[1], domain, raw);
         }
         if (PROBLEM_QUADRATIC.equals(problemId) && k.length == 3) {
-            double[] raw = NativeSolver.quadratic(k[0], k[1], k[2], domain);
-            return SolveResultDecoder.decodeQuadratic(k[0], k[1], k[2], domain, raw);
+            double[] raw = NativeSolver.quadratic(k[0], k[1], k[2], domain, rootForm);
+            return SolveResultDecoder.decodeQuadratic(k[0], k[1], k[2], domain, rootForm, raw);
         }
         return null;
     }
@@ -341,7 +367,7 @@ public class ProblemInputActivity extends AppCompatActivity {
         analysisBehaviorView.setVisibility(View.VISIBLE);
     }
 
-    private void showResult(@NonNull SolveResult result) {
+    private void showResult(@NonNull SolveResult result, double a) {
         Double discriminant = result.getDiscriminant();
         if (result.isDiscriminantNegative()) {
             resultDiscriminantView.setText(R.string.result_discriminant_negative);
@@ -378,6 +404,10 @@ public class ProblemInputActivity extends AppCompatActivity {
         switch (result.getStatus()) {
             case ROOTS:
                 resultBodyView.setText(formatRoots(result.getRoots()));
+                break;
+            case ROOT_FORM:
+                resultBodyView.setText(getString(R.string.result_root_form,
+                        NumberFormatter.formatRootForm(result.getCenter(), discriminant, a)));
                 break;
             case NO_ROOTS:
                 resultBodyView.setText(R.string.result_no_roots);

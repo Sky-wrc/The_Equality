@@ -6,4 +6,8 @@
     <item
         android:id="@+id/action_number_domain"
         android:title="@string/menu_number_domain" />
+    <item
+        android:id="@+id/action_simplify_roots"
+        android:checkable="true"
+        android:title="@string/menu_simplify_roots" />
 </menu>

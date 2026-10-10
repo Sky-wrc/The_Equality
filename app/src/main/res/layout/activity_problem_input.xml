@@ -46,6 +46,18 @@
             tools:text="quadratic equation" />
 
         <ImageButton
+            android:id="@+id/btn_simplify_roots"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/content_description_simplify_roots_off"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_sqrt_24"
+            android:tint="@color/text_secondary" />
+
+        <ImageButton
             android:id="@+id/btn_reset"
             android:layout_width="48dp"
             android:layout_height="48dp"
