@@ -29,9 +29,7 @@
     <string name="result_quotient">Quotient = %1$s</string>
     <string name="result_modulo">Modulo = %1$s</string>
     <string name="result_root_single">x = %1$s</string>
-    <string name="result_root_indexed">x%1$d = %2$s</string>
-    <string name="result_root_form">x1,2 = %1$s</string>
-    <string name="result_no_roots">No roots in the selected number domain</string>
+    <string name="result_root_indexed">x%1$d = %2$s</string>    <string name="result_no_roots">No roots in the selected number domain</string>
     <string name="result_infinite_roots">Infinitely many roots</string>
     <string name="result_not_quadratic">a = 0: not a quadratic equation</string>
     <string name="result_undetermined">Roots cannot be determined in the selected number domain</string>

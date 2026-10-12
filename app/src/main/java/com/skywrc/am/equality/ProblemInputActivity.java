@@ -406,8 +406,7 @@ public class ProblemInputActivity extends AppCompatActivity {
                 resultBodyView.setText(formatRoots(result.getRoots()));
                 break;
             case ROOT_FORM:
-                resultBodyView.setText(getString(R.string.result_root_form,
-                        NumberFormatter.formatRootForm(result.getCenter(), discriminant, a)));
+                resultBodyView.setText(formatRootForm(result.getCenter(), discriminant, a));
                 break;
             case NO_ROOTS:
                 resultBodyView.setText(R.string.result_no_roots);
@@ -435,6 +434,17 @@ public class ProblemInputActivity extends AppCompatActivity {
             lines.add(getString(R.string.result_root_indexed, i + 1, formatRoot(roots.get(i))));
         }
         return TextUtils.join("\n", lines);
+    }
+
+    /** Real roots go in ascending order; complex ones in the solver's order, +i√|D|/2a first. */
+    @NonNull
+    private String formatRootForm(double center, double discriminant, double a) {
+        boolean firstPlus = discriminant < 0 && a > 0;
+        return getString(R.string.result_root_indexed, 1,
+                NumberFormatter.formatRootForm(center, discriminant, a, firstPlus))
+                + "\n"
+                + getString(R.string.result_root_indexed, 2,
+                NumberFormatter.formatRootForm(center, discriminant, a, !firstPlus));
     }
 
     @NonNull

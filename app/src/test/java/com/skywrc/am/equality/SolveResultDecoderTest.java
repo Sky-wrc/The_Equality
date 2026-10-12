@@ -15,7 +15,8 @@ public class SolveResultDecoderTest {
         assertEquals(SolveResult.Status.ROOT_FORM, result.getStatus());
         assertEquals(1, result.getCenter(), 0);
         assertEquals(8, result.getDiscriminant(), 0);
-        assertEquals("1 ± √8/2", NumberFormatter.formatRootForm(result.getCenter(), 8, 1));
+        assertEquals("1 − √8/2", NumberFormatter.formatRootForm(result.getCenter(), 8, 1, false));
+        assertEquals("1 + √8/2", NumberFormatter.formatRootForm(result.getCenter(), 8, 1, true));
     }
 
     @Test
@@ -52,13 +53,14 @@ public class SolveResultDecoderTest {
         SolveResult result = SolveResultDecoder.decodeQuadratic(1, 2, 5, 'C', true,
                 new double[]{-1, 0, -14, 0, -16});
         assertEquals(SolveResult.Status.ROOT_FORM, result.getStatus());
-        assertEquals("-1 ± i√16/2", NumberFormatter.formatRootForm(result.getCenter(), -16, 1));
+        assertEquals("-1 + i√16/2", NumberFormatter.formatRootForm(result.getCenter(), -16, 1, true));
     }
 
     @Test
     public void rootFormOmitsZeroCenterAndUnitDenominator() {
-        assertEquals("±√5", NumberFormatter.formatRootForm(0, 5, 0.5));
-        assertEquals("1.5 ± √3/4", NumberFormatter.formatRootForm(1.5, 3, -2));
+        assertEquals("−√5", NumberFormatter.formatRootForm(0, 5, 0.5, false));
+        assertEquals("√5", NumberFormatter.formatRootForm(0, 5, 0.5, true));
+        assertEquals("1.5 − √3/4", NumberFormatter.formatRootForm(1.5, 3, -2, false));
     }
 
     @Test
