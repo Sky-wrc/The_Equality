@@ -21,6 +21,7 @@ public final class SolveResultDecoder {
     private static final double RT_REAL_OR_INTEGER_FORM = -10;
     private static final double RT_NATURAL_FORM = -12;
     private static final double RT_COMPLEX_FORM = -14;
+    private static final int CUBIC_NOT_CUBIC = -1;
     private static final double ROOT_EPSILON = 1e-9;
 
     private SolveResultDecoder() {
@@ -148,6 +149,27 @@ public final class SolveResultDecoder {
             default:
                 return undetermined();
         }
+    }
+
+    /** raw = {x1re, x1im, x2re, x2im, x3re, x3im, D, count} from cubic_solver. */
+    @NonNull
+    public static SolveResult decodeCubic(@NonNull double[] raw) {
+        int count = (int) raw[7];
+        double discriminant = raw[6];
+        if (count == CUBIC_NOT_CUBIC) {
+            return result(SolveResult.Status.NOT_CUBIC, new ArrayList<>(), null, false);
+        }
+        if (count < 0 || count > 3) {
+            return undetermined();
+        }
+        if (count == 0) {
+            return noRoots(discriminant, false);
+        }
+        List<SolveResult.Root> roots = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            roots.add(new SolveResult.Root(raw[2 * i], raw[2 * i + 1]));
+        }
+        return roots(roots, discriminant);
     }
 
     /**

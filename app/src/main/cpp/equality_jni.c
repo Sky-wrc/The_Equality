@@ -2,6 +2,7 @@
 
 #include "linear.h"
 #include "quadratic.h"
+#include "cubic.h"
 
 JNIEXPORT jdoubleArray JNICALL
 Java_com_skywrc_am_equality_NativeSolver_linear(JNIEnv *env, jclass clazz,
@@ -34,6 +35,24 @@ Java_com_skywrc_am_equality_NativeSolver_quadratic(JNIEnv *env, jclass clazz,
     jdoubleArray result = (*env)->NewDoubleArray(env, 5);
     if (result != NULL) {
         (*env)->SetDoubleArrayRegion(env, result, 0, 5, out);
+    }
+    return result;
+}
+
+JNIEXPORT jdoubleArray JNICALL
+Java_com_skywrc_am_equality_NativeSolver_cubic(JNIEnv *env, jclass clazz,
+                                               jdouble a, jdouble b, jdouble c, jdouble d,
+                                               jchar domain)
+{
+    double x1[2], x2[2], x3[2];
+    double discriminant = 0.0;
+    int count = 0;
+    cubic_solver(x1, x2, x3, &discriminant, &count, a, b, c, d, (char) domain);
+
+    jdouble out[8] = { x1[0], x1[1], x2[0], x2[1], x3[0], x3[1], discriminant, (jdouble) count };
+    jdoubleArray result = (*env)->NewDoubleArray(env, 8);
+    if (result != NULL) {
+        (*env)->SetDoubleArrayRegion(env, result, 0, 8, out);
     }
     return result;
 }

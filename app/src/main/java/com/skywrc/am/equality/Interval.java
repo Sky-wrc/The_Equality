@@ -45,6 +45,16 @@ public final class Interval {
         return new Interval(x, Double.POSITIVE_INFINITY, true, false);
     }
 
+    /** [from, to] with infinite ends left open, e.g. (−∞, 1] or [1, 2]. */
+    @NonNull
+    public static Interval closedAtFiniteEnds(double from, double to) {
+        return new Interval(from, to, !Double.isInfinite(from), !Double.isInfinite(to));
+    }
+
+    public boolean startsAtMinusInfinity() {
+        return from == Double.NEGATIVE_INFINITY;
+    }
+
     public boolean isPoint() {
         return from == to;
     }

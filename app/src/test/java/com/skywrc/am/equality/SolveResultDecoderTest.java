@@ -64,6 +64,31 @@ public class SolveResultDecoderTest {
     }
 
     @Test
+    public void cubicCountSelectsRoots() {
+        SolveResult three = SolveResultDecoder.decodeCubic(new double[]{1, 0, 2, 0, 3, 0, 4, 3});
+        assertEquals(SolveResult.Status.ROOTS, three.getStatus());
+        assertEquals(3, three.getRoots().size());
+        assertEquals(3, three.getRoots().get(2).getRe(), 0);
+        assertEquals(4, three.getDiscriminant(), 0);
+
+        SolveResult complex = SolveResultDecoder.decodeCubic(new double[]{-2, 0, 1, 2, 1, -2, -2704, 3});
+        assertEquals(2, complex.getRoots().get(1).getIm(), 0);
+        assertEquals(-2, complex.getRoots().get(2).getIm(), 0);
+
+        assertEquals(SolveResult.Status.NO_ROOTS,
+                SolveResultDecoder.decodeCubic(new double[]{0, 0, 0, 0, 0, 0, -108, 0}).getStatus());
+        assertEquals(SolveResult.Status.NOT_CUBIC,
+                SolveResultDecoder.decodeCubic(new double[]{0, 0, 0, 0, 0, 0, 0, -1}).getStatus());
+    }
+
+    @Test
+    public void subscriptUsesUnicodeDigits() {
+        assertEquals("₁", NumberFormatter.subscript(1));
+        assertEquals("₂", NumberFormatter.subscript(2));
+        assertEquals("₁₀", NumberFormatter.subscript(10));
+    }
+
+    @Test
     public void explicitRootsAreUnchanged() {
         SolveResult result = SolveResultDecoder.decodeQuadratic(1, -3, 2, 'R', false,
                 new double[]{1, 0, 2, 0, 1});

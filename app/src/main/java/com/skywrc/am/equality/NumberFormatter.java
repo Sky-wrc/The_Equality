@@ -24,6 +24,15 @@ public final class NumberFormatter {
         return "0".equals(rounded) || "-0".equals(rounded) ? String.valueOf(value) : rounded;
     }
 
+    /** Writes a non-negative index with Unicode subscript digits, e.g. 12 → ₁₂. */
+    public static String subscript(int index) {
+        StringBuilder result = new StringBuilder();
+        for (char digit : String.valueOf(index).toCharArray()) {
+            result.append((char) ('\u2080' + (digit - '0')));
+        }
+        return result.toString();
+    }
+
     /**
      * Formats one of the roots -b/2a ± √D/2a as "center + √D/|2a|" or "center − √D/|2a|",
      * with i√|D| for a negative D.

@@ -15,6 +15,7 @@ public final class SolveResult {
         NO_ROOTS,
         INFINITE_ROOTS,
         NOT_QUADRATIC,
+        NOT_CUBIC,
         UNDETERMINED
     }
 

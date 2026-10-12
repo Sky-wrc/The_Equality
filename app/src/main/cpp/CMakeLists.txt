@@ -7,6 +7,7 @@ add_library(equality SHARED
         equality_jni.c
         ${SOLVERS_DIR}/solving_scripts/linear.c
         ${SOLVERS_DIR}/solving_scripts/quadratic.c
+        ${SOLVERS_DIR}/solving_scripts/cubic.c
         ${SOLVERS_DIR}/tools/mymath.c)
 
 target_include_directories(equality PRIVATE ${SOLVERS_DIR}/include)

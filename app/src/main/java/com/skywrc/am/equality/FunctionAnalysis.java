@@ -8,16 +8,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Sign, extremum and monotonicity of F(x) over the reals, built from the roots
+ * Sign, extrema and monotonicity of F(x) over the reals, built from the roots
  * already returned by the native solvers.
  */
 public final class FunctionAnalysis {
 
     public enum GraphType {
         STRAIGHT_LINE,
-        PARABOLA
+        PARABOLA,
+        CUBIC_PARABOLA
     }
 
+    /** For a parabola where the branches point; for a cubic parabola UP means it rises from −∞ to +∞. */
     public enum Branches {
         UP,
         DOWN
@@ -28,6 +30,31 @@ public final class FunctionAnalysis {
         MAXIMUM
     }
 
+    public static final class Extremum {
+        private final ExtremumType type;
+        private final double x;
+        private final double y;
+
+        Extremum(@NonNull ExtremumType type, double x, double y) {
+            this.type = type;
+            this.x = x;
+            this.y = y;
+        }
+
+        @NonNull
+        public ExtremumType getType() {
+            return type;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+    }
+
     private static final double ZERO_EPSILON = 1e-12;
 
     private final GraphType graphType;
@@ -36,28 +63,28 @@ public final class FunctionAnalysis {
     private final List<Interval> positive;
     private final List<Interval> negative;
     private final List<Interval> zero;
-    @Nullable
-    private final ExtremumType extremumType;
-    private final double extremumX;
-    private final double extremumY;
+    private final List<Extremum> extrema;
     private final List<Interval> increasing;
     private final List<Interval> decreasing;
+    @Nullable
+    private final Double inflectionX;
+    private final double inflectionY;
 
     private FunctionAnalysis(@NonNull GraphType graphType, @Nullable Branches branches,
                              @NonNull List<Interval> positive, @NonNull List<Interval> negative,
-                             @NonNull List<Interval> zero, @Nullable ExtremumType extremumType,
-                             double extremumX, double extremumY,
-                             @NonNull List<Interval> increasing, @NonNull List<Interval> decreasing) {
+                             @NonNull List<Interval> zero, @NonNull List<Extremum> extrema,
+                             @NonNull List<Interval> increasing, @NonNull List<Interval> decreasing,
+                             @Nullable Double inflectionX, double inflectionY) {
         this.graphType = graphType;
         this.branches = branches;
         this.positive = Collections.unmodifiableList(positive);
         this.negative = Collections.unmodifiableList(negative);
         this.zero = Collections.unmodifiableList(zero);
-        this.extremumType = extremumType;
-        this.extremumX = extremumX;
-        this.extremumY = extremumY;
+        this.extrema = Collections.unmodifiableList(extrema);
         this.increasing = Collections.unmodifiableList(increasing);
         this.decreasing = Collections.unmodifiableList(decreasing);
+        this.inflectionX = inflectionX;
+        this.inflectionY = inflectionY;
     }
 
     /** F(x) = ax + b; {@code root} is the solver's root, ignored when a = 0. */
@@ -73,8 +100,9 @@ public final class FunctionAnalysis {
                 a > 0 ? right : left,
                 a > 0 ? left : right,
                 list(Interval.point(root)),
-                null, 0, 0,
-                new ArrayList<>(), new ArrayList<>()
+                new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                null, 0
         );
     }
 
@@ -106,21 +134,81 @@ public final class FunctionAnalysis {
             outside = list(Interval.ALL);
         }
 
-        double vertexY = a * vertexX * vertexX + b * vertexX + c;
-        if (Math.abs(vertexY) < ZERO_EPSILON) {
-            vertexY = 0;
-        }
+        double vertexY = snapToZero(a * vertexX * vertexX + b * vertexX + c);
         List<Interval> left = list(Interval.upTo(vertexX));
         List<Interval> right = list(Interval.startingAt(vertexX));
+        List<Extremum> extrema = new ArrayList<>();
+        extrema.add(new Extremum(a > 0 ? ExtremumType.MINIMUM : ExtremumType.MAXIMUM, vertexX, vertexY));
         return new FunctionAnalysis(
                 GraphType.PARABOLA, a > 0 ? Branches.UP : Branches.DOWN,
                 a > 0 ? outside : inside,
                 a > 0 ? inside : outside,
                 zero,
-                a > 0 ? ExtremumType.MINIMUM : ExtremumType.MAXIMUM,
-                vertexX, vertexY,
+                extrema,
                 a > 0 ? right : left,
-                a > 0 ? left : right
+                a > 0 ? left : right,
+                null, 0
+        );
+    }
+
+    /**
+     * F(x) = ax³ + bx² + cx + d with a ≠ 0; {@code roots} are the solver's real roots,
+     * {@code criticalPoints} the real roots of F'(x) = 3ax² + 2bx + c and
+     * {@code inflectionX} the root of F''(x) = 6ax + 2b.
+     */
+    @NonNull
+    public static FunctionAnalysis cubic(double a, double b, double c, double d,
+                                         @NonNull List<Double> roots, @NonNull List<Double> criticalPoints,
+                                         double inflectionX) {
+        double[] f = {a, b, c, d};
+        double[] derivative = {3 * a, 2 * b, c};
+
+        List<Double> zeros = distinctSorted(roots);
+        List<Interval> positive = new ArrayList<>();
+        List<Interval> negative = new ArrayList<>();
+        List<Interval> zero = new ArrayList<>();
+        List<Double> bounds = withInfiniteEnds(zeros);
+        for (int i = 0; i + 1 < bounds.size(); i++) {
+            double from = bounds.get(i);
+            double to = bounds.get(i + 1);
+            (evaluate(f, sampleBetween(from, to)) > 0 ? positive : negative).add(Interval.open(from, to));
+        }
+        for (double x : zeros) {
+            zero.add(Interval.point(x));
+        }
+
+        // Pieces between critical points; neighbours with the same direction are merged.
+        List<Double> pieceStarts = new ArrayList<>();
+        List<Boolean> pieceRising = new ArrayList<>();
+        List<Double> criticalBounds = withInfiniteEnds(distinctSorted(criticalPoints));
+        List<Extremum> extrema = new ArrayList<>();
+        for (int i = 0; i + 1 < criticalBounds.size(); i++) {
+            double from = criticalBounds.get(i);
+            boolean rising = evaluate(derivative, sampleBetween(from, criticalBounds.get(i + 1))) > 0;
+            int last = pieceRising.size() - 1;
+            if (last >= 0 && pieceRising.get(last) == rising) {
+                continue;
+            }
+            if (last >= 0) {
+                extrema.add(new Extremum(rising ? ExtremumType.MINIMUM : ExtremumType.MAXIMUM,
+                        from, snapToZero(evaluate(f, from))));
+            }
+            pieceStarts.add(from);
+            pieceRising.add(rising);
+        }
+        List<Interval> increasing = new ArrayList<>();
+        List<Interval> decreasing = new ArrayList<>();
+        for (int i = 0; i < pieceStarts.size(); i++) {
+            double to = i + 1 < pieceStarts.size() ? pieceStarts.get(i + 1) : Double.POSITIVE_INFINITY;
+            (pieceRising.get(i) ? increasing : decreasing).add(Interval.closedAtFiniteEnds(pieceStarts.get(i), to));
+        }
+
+        return new FunctionAnalysis(
+                GraphType.CUBIC_PARABOLA, a > 0 ? Branches.UP : Branches.DOWN,
+                positive, negative, zero,
+                extrema,
+                increasing, decreasing,
+                inflectionX, snapToZero(evaluate(f, inflectionX))
         );
     }
 
@@ -131,9 +219,60 @@ public final class FunctionAnalysis {
                 value > 0 ? list(Interval.ALL) : new ArrayList<>(),
                 value < 0 ? list(Interval.ALL) : new ArrayList<>(),
                 value == 0 ? list(Interval.ALL) : new ArrayList<>(),
-                null, 0, 0,
-                new ArrayList<>(), new ArrayList<>()
+                new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(),
+                null, 0
         );
+    }
+
+    /** Coefficients go from the highest power down to x⁰. */
+    private static double evaluate(@NonNull double[] coefficients, double x) {
+        double value = 0;
+        for (double coefficient : coefficients) {
+            value = value * x + coefficient;
+        }
+        return value;
+    }
+
+    private static double sampleBetween(double from, double to) {
+        boolean fromInfinite = Double.isInfinite(from);
+        boolean toInfinite = Double.isInfinite(to);
+        if (fromInfinite && toInfinite) {
+            return 0;
+        }
+        if (fromInfinite) {
+            return to - 1;
+        }
+        if (toInfinite) {
+            return from + 1;
+        }
+        return (from + to) / 2;
+    }
+
+    private static double snapToZero(double value) {
+        return Math.abs(value) < ZERO_EPSILON ? 0 : value;
+    }
+
+    @NonNull
+    private static List<Double> distinctSorted(@NonNull List<Double> values) {
+        List<Double> sorted = new ArrayList<>(values);
+        Collections.sort(sorted);
+        List<Double> distinct = new ArrayList<>();
+        for (double value : sorted) {
+            if (distinct.isEmpty() || distinct.get(distinct.size() - 1) != value) {
+                distinct.add(value);
+            }
+        }
+        return distinct;
+    }
+
+    @NonNull
+    private static List<Double> withInfiniteEnds(@NonNull List<Double> points) {
+        List<Double> bounds = new ArrayList<>();
+        bounds.add(Double.NEGATIVE_INFINITY);
+        bounds.addAll(points);
+        bounds.add(Double.POSITIVE_INFINITY);
+        return bounds;
     }
 
     @NonNull
@@ -169,18 +308,10 @@ public final class FunctionAnalysis {
         return zero;
     }
 
-    /** Null for linear functions. */
-    @Nullable
-    public ExtremumType getExtremumType() {
-        return extremumType;
-    }
-
-    public double getExtremumX() {
-        return extremumX;
-    }
-
-    public double getExtremumY() {
-        return extremumY;
+    /** Local extrema from left to right; empty for linear and monotonic cubic functions. */
+    @NonNull
+    public List<Extremum> getExtrema() {
+        return extrema;
     }
 
     /** Empty for linear functions. */
@@ -193,5 +324,15 @@ public final class FunctionAnalysis {
     @NonNull
     public List<Interval> getDecreasing() {
         return decreasing;
+    }
+
+    /** Only cubic functions have an inflection point. */
+    @Nullable
+    public Double getInflectionX() {
+        return inflectionX;
+    }
+
+    public double getInflectionY() {
+        return inflectionY;
     }
 }

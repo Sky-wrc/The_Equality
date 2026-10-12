@@ -29,9 +29,11 @@
     <string name="result_quotient">Quotient = %1$s</string>
     <string name="result_modulo">Modulo = %1$s</string>
     <string name="result_root_single">x = %1$s</string>
-    <string name="result_root_indexed">x%1$d = %2$s</string>    <string name="result_no_roots">No roots in the selected number domain</string>
+    <string name="result_root_indexed">x%1$s = %2$s</string>
+    <string name="result_no_roots">No roots in the selected number domain</string>
     <string name="result_infinite_roots">Infinitely many roots</string>
     <string name="result_not_quadratic">a = 0: not a quadratic equation</string>
+    <string name="result_not_cubic">a = 0: not a cubic equation</string>
     <string name="result_undetermined">Roots cannot be determined in the selected number domain</string>
     <string name="result_solver_unavailable">Solver not available yet</string>
 
@@ -40,6 +42,10 @@
     <string name="analysis_function">F(x) = %1$s</string>
     <string name="analysis_graph_line">Graph: straight line</string>
     <string name="analysis_graph_parabola">Graph: parabola</string>
+    <string name="analysis_graph_cubic_parabola">Graph: cubic parabola</string>
+    <string name="analysis_cubic_rising">Goes from −∞ up to +∞ (a &gt; 0)</string>
+    <string name="analysis_cubic_falling">Goes from +∞ down to −∞ (a &lt; 0)</string>
+    <string name="analysis_inflection">Inflection point: F(%1$s) = %2$s</string>
     <string name="analysis_branches_up">Branches point up (a &gt; 0)</string>
     <string name="analysis_branches_down">Branches point down (a &lt; 0)</string>
     <string name="analysis_positive">F(x) &gt; 0: x ∈ %1$s</string>

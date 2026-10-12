@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextPaint;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -40,10 +42,20 @@ public class ProblemInputActivity extends AppCompatActivity {
     private static final String STATE_RESULT_VISIBLE = "state_result_visible";
     private static final String STATE_ANALYSIS_VISIBLE = "state_analysis_visible";
 
+    private static final float ANALYSIS_BODY_MAX_SP = 16f;
+    private static final float ANALYSIS_BODY_MIN_SP = 12f;
+    private static final float ANALYSIS_FUNCTION_MAX_SP = 22f;
+    private static final float ANALYSIS_FUNCTION_MIN_SP = 16f;
+    private static final float ANALYSIS_STEP_SP = 0.5f;
+    private static final int ANALYSIS_COMFORT_LINES = 6;
+    /** Inner padding of analysis_card in activity_problem_input.xml. */
+    private static final int ANALYSIS_CARD_PADDING_DP = 20;
+
     private static final String PROBLEM_LINEAR = "linear";
     private static final String PROBLEM_QUADRATIC = "quadratic";
+    private static final String PROBLEM_CUBIC = "cubic";
     private static final Set<String> POLYNOMIAL_PROBLEMS =
-            new HashSet<>(Arrays.asList(PROBLEM_LINEAR, PROBLEM_QUADRATIC, "cubic"));
+            new HashSet<>(Arrays.asList(PROBLEM_LINEAR, PROBLEM_QUADRATIC, PROBLEM_CUBIC));
 
     private String problemId;
     private InputPanel inputPanel;
@@ -279,6 +291,7 @@ public class ProblemInputActivity extends AppCompatActivity {
             analysisCard.setVisibility(View.GONE);
         } else {
             bindAnalysis(values, analysis);
+            fitAnalysisTextWhenLaidOut();
             functionButton.setVisibility(View.VISIBLE);
         }
 
@@ -296,6 +309,9 @@ public class ProblemInputActivity extends AppCompatActivity {
         if (PROBLEM_QUADRATIC.equals(problemId) && k.length == 3) {
             double[] raw = NativeSolver.quadratic(k[0], k[1], k[2], domain, rootForm);
             return SolveResultDecoder.decodeQuadratic(k[0], k[1], k[2], domain, rootForm, raw);
+        }
+        if (PROBLEM_CUBIC.equals(problemId) && k.length == 4) {
+            return SolveResultDecoder.decodeCubic(NativeSolver.cubic(k[0], k[1], k[2], k[3], domain));
         }
         return null;
     }
@@ -323,6 +339,24 @@ public class ProblemInputActivity extends AppCompatActivity {
             }
             return FunctionAnalysis.quadratic(k[0], k[1], k[2], roots, derivative.getRoots().get(0).getRe());
         }
+        if (PROBLEM_CUBIC.equals(problemId) && k.length == 4 && k[0] != 0) {
+            // Extrema are the roots of F'(x) = 3ax² + 2bx + c, the inflection point is the root of F''(x) = 6ax + 2b.
+            char reals = NumberDomain.REALS.getCode();
+            double[] rawDerivative = NativeSolver.quadratic(3 * k[0], 2 * k[1], k[2], reals, false);
+            SolveResult derivative = SolveResultDecoder.decodeQuadratic(
+                    3 * k[0], 2 * k[1], k[2], reals, false, rawDerivative);
+            List<Double> criticalPoints = new ArrayList<>();
+            for (SolveResult.Root root : derivative.getRoots()) {
+                criticalPoints.add(root.getRe());
+            }
+            double[] rawSecond = NativeSolver.linear(6 * k[0], 2 * k[1], reals);
+            SolveResult second = SolveResultDecoder.decodeLinear(6 * k[0], 2 * k[1], reals, rawSecond);
+            if (second.getRoots().isEmpty()) {
+                return null;
+            }
+            return FunctionAnalysis.cubic(k[0], k[1], k[2], k[3], roots, criticalPoints,
+                    second.getRoots().get(0).getRe());
+        }
         return null;
     }
 
@@ -334,14 +368,27 @@ public class ProblemInputActivity extends AppCompatActivity {
         analysisFunctionView.setText(getString(R.string.analysis_function,
                 FormulaRenderer.renderExpression(cellLabels(), coefficients)));
 
+        boolean cubic = analysis.getGraphType() == FunctionAnalysis.GraphType.CUBIC_PARABOLA;
         List<String> graph = new ArrayList<>();
-        graph.add(getString(analysis.getGraphType() == FunctionAnalysis.GraphType.PARABOLA
-                ? R.string.analysis_graph_parabola
-                : R.string.analysis_graph_line));
+        switch (analysis.getGraphType()) {
+            case PARABOLA:
+                graph.add(getString(R.string.analysis_graph_parabola));
+                break;
+            case CUBIC_PARABOLA:
+                graph.add(getString(R.string.analysis_graph_cubic_parabola));
+                break;
+            case STRAIGHT_LINE:
+            default:
+                graph.add(getString(R.string.analysis_graph_line));
+                break;
+        }
         if (analysis.getBranches() != null) {
-            graph.add(getString(analysis.getBranches() == FunctionAnalysis.Branches.UP
-                    ? R.string.analysis_branches_up
-                    : R.string.analysis_branches_down));
+            boolean up = analysis.getBranches() == FunctionAnalysis.Branches.UP;
+            if (cubic) {
+                graph.add(getString(up ? R.string.analysis_cubic_rising : R.string.analysis_cubic_falling));
+            } else {
+                graph.add(getString(up ? R.string.analysis_branches_up : R.string.analysis_branches_down));
+            }
         }
         analysisGraphView.setText(TextUtils.join("\n", graph));
 
@@ -351,20 +398,106 @@ public class ProblemInputActivity extends AppCompatActivity {
                 getString(R.string.analysis_zero, Interval.format(analysis.getZero()))
         )));
 
-        FunctionAnalysis.ExtremumType extremum = analysis.getExtremumType();
-        if (extremum == null) {
+        List<Interval> increasing = analysis.getIncreasing();
+        List<Interval> decreasing = analysis.getDecreasing();
+        if (increasing.isEmpty() && decreasing.isEmpty()) {
             analysisBehaviorView.setVisibility(View.GONE);
             return;
         }
-        String x = Interval.formatNumber(analysis.getExtremumX());
-        String y = Interval.formatNumber(analysis.getExtremumY());
-        String increasing = getString(R.string.analysis_increasing, Interval.format(analysis.getIncreasing()));
-        String decreasing = getString(R.string.analysis_decreasing, Interval.format(analysis.getDecreasing()));
-        List<String> lines = extremum == FunctionAnalysis.ExtremumType.MINIMUM
-                ? Arrays.asList(getString(R.string.analysis_minimum, x, y), decreasing, increasing)
-                : Arrays.asList(getString(R.string.analysis_maximum, x, y), increasing, decreasing);
+        List<String> lines = new ArrayList<>();
+        for (FunctionAnalysis.Extremum extremum : analysis.getExtrema()) {
+            lines.add(getString(extremum.getType() == FunctionAnalysis.ExtremumType.MINIMUM
+                            ? R.string.analysis_minimum
+                            : R.string.analysis_maximum,
+                    Interval.formatNumber(extremum.getX()), Interval.formatNumber(extremum.getY())));
+        }
+        // The set that starts at −∞ goes first, so the lines follow the graph from left to right.
+        String increasingLine = increasing.isEmpty() ? null
+                : getString(R.string.analysis_increasing, Interval.format(increasing));
+        String decreasingLine = decreasing.isEmpty() ? null
+                : getString(R.string.analysis_decreasing, Interval.format(decreasing));
+        boolean increasingFirst = !increasing.isEmpty() && increasing.get(0).startsAtMinusInfinity();
+        for (String line : increasingFirst
+                ? Arrays.asList(increasingLine, decreasingLine)
+                : Arrays.asList(decreasingLine, increasingLine)) {
+            if (line != null) {
+                lines.add(line);
+            }
+        }
+        Double inflectionX = analysis.getInflectionX();
+        if (inflectionX != null) {
+            lines.add(getString(R.string.analysis_inflection,
+                    Interval.formatNumber(inflectionX), Interval.formatNumber(analysis.getInflectionY())));
+        }
         analysisBehaviorView.setText(TextUtils.join("\n", lines));
         analysisBehaviorView.setVisibility(View.VISIBLE);
+    }
+
+    /** The analysis card may still be gone, so its width is taken from the scroll view once it has one. */
+    private void fitAnalysisTextWhenLaidOut() {
+        if (scrollView.getWidth() > 0) {
+            fitAnalysisText();
+            return;
+        }
+        scrollView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                v.removeOnLayoutChangeListener(this);
+                fitAnalysisText();
+            }
+        });
+    }
+
+    /**
+     * Shrinks the analysis text a little for every line above {@link #ANALYSIS_COMFORT_LINES} and then
+     * until the widest line fits without wrapping, but never below the minimum size.
+     */
+    private void fitAnalysisText() {
+        float available = scrollView.getWidth() - scrollView.getPaddingLeft() - scrollView.getPaddingRight()
+                - 2 * dpToPx(ANALYSIS_CARD_PADDING_DP);
+        if (available <= 0) {
+            return;
+        }
+
+        TextView[] bodyViews = {analysisGraphView, analysisSignsView, analysisBehaviorView};
+        List<String> lines = new ArrayList<>();
+        for (TextView view : bodyViews) {
+            if (view.getVisibility() == View.VISIBLE) {
+                lines.addAll(Arrays.asList(view.getText().toString().split("\n")));
+            }
+        }
+        float bodySize = Math.max(ANALYSIS_BODY_MIN_SP,
+                ANALYSIS_BODY_MAX_SP - ANALYSIS_STEP_SP * Math.max(0, lines.size() - ANALYSIS_COMFORT_LINES));
+        bodySize = fitWidth(analysisSignsView, lines, available, bodySize, ANALYSIS_BODY_MIN_SP);
+        for (TextView view : bodyViews) {
+            view.setTextSize(TypedValue.COMPLEX_UNIT_SP, bodySize);
+        }
+
+        float functionSize = fitWidth(analysisFunctionView,
+                Arrays.asList(analysisFunctionView.getText().toString()),
+                available, ANALYSIS_FUNCTION_MAX_SP, ANALYSIS_FUNCTION_MIN_SP);
+        analysisFunctionView.setTextSize(TypedValue.COMPLEX_UNIT_SP, functionSize);
+    }
+
+    /** The largest size from {@code startSp} down to {@code minSp} at which every line fits into {@code width}. */
+    private float fitWidth(@NonNull TextView view, @NonNull List<String> lines, float width,
+                           float startSp, float minSp) {
+        TextPaint paint = new TextPaint(view.getPaint());
+        float size = startSp;
+        while (size > minSp) {
+            paint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, size,
+                    getResources().getDisplayMetrics()));
+            float widest = 0;
+            for (String line : lines) {
+                widest = Math.max(widest, paint.measureText(line));
+            }
+            if (widest <= width) {
+                break;
+            }
+            size -= ANALYSIS_STEP_SP;
+        }
+        return Math.max(size, minSp);
     }
 
     private void showResult(@NonNull SolveResult result, double a) {
@@ -378,10 +511,15 @@ public class ProblemInputActivity extends AppCompatActivity {
                     getString(R.string.result_discriminant, NumberFormatter.format(discriminant))
             );
             resultDiscriminantView.setVisibility(View.VISIBLE);
-            resultSqrtDiscriminantView.setText(
-                    getString(R.string.result_sqrt_discriminant, formatSqrt(discriminant))
-            );
-            resultSqrtDiscriminantView.setVisibility(View.VISIBLE);
+            if (PROBLEM_CUBIC.equals(problemId)) {
+                // √D is part of the quadratic formula only.
+                resultSqrtDiscriminantView.setVisibility(View.GONE);
+            } else {
+                resultSqrtDiscriminantView.setText(
+                        getString(R.string.result_sqrt_discriminant, formatSqrt(discriminant))
+                );
+                resultSqrtDiscriminantView.setVisibility(View.VISIBLE);
+            }
         } else {
             resultDiscriminantView.setVisibility(View.GONE);
             resultSqrtDiscriminantView.setVisibility(View.GONE);
@@ -417,6 +555,9 @@ public class ProblemInputActivity extends AppCompatActivity {
             case NOT_QUADRATIC:
                 resultBodyView.setText(R.string.result_not_quadratic);
                 break;
+            case NOT_CUBIC:
+                resultBodyView.setText(R.string.result_not_cubic);
+                break;
             case UNDETERMINED:
             default:
                 resultBodyView.setText(R.string.result_undetermined);
@@ -431,7 +572,8 @@ public class ProblemInputActivity extends AppCompatActivity {
         }
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < roots.size(); i++) {
-            lines.add(getString(R.string.result_root_indexed, i + 1, formatRoot(roots.get(i))));
+            lines.add(getString(R.string.result_root_indexed, NumberFormatter.subscript(i + 1),
+                    formatRoot(roots.get(i))));
         }
         return TextUtils.join("\n", lines);
     }
@@ -440,10 +582,10 @@ public class ProblemInputActivity extends AppCompatActivity {
     @NonNull
     private String formatRootForm(double center, double discriminant, double a) {
         boolean firstPlus = discriminant < 0 && a > 0;
-        return getString(R.string.result_root_indexed, 1,
+        return getString(R.string.result_root_indexed, NumberFormatter.subscript(1),
                 NumberFormatter.formatRootForm(center, discriminant, a, firstPlus))
                 + "\n"
-                + getString(R.string.result_root_indexed, 2,
+                + getString(R.string.result_root_indexed, NumberFormatter.subscript(2),
                 NumberFormatter.formatRootForm(center, discriminant, a, !firstPlus));
     }
 
